@@ -113,18 +113,21 @@ void CSettingsDlg::OnChLogitechcontrol()
 
 void CSettingsDlg::OnChAutoFocus()
 {
-	if (!m_pCurrentWebCam) return;
 	BOOL bAuto = m_chAutoFocus.GetCheck();
 	m_slFocus.EnableWindow(!bAuto);
+	theApp.WriteProfileInt(REG_DEVICE, _T("AutoFocus"), bAuto);
 	if (bAuto)
 	{
-		m_pCurrentWebCam->SetFocus(0, CameraControl_Flags_Auto);
+		if (m_pCurrentWebCam)
+			m_pCurrentWebCam->SetFocus(0, CameraControl_Flags_Auto);
 		m_stFocusValue.SetWindowText(_T("Auto"));
 	}
 	else
 	{
 		long lPos = m_slFocus.GetPos();
-		m_pCurrentWebCam->SetFocus(lPos, CameraControl_Flags_Manual);
+		if (m_pCurrentWebCam)
+			m_pCurrentWebCam->SetFocus(lPos, CameraControl_Flags_Manual);
+		theApp.WriteProfileInt(REG_DEVICE, _T("FocusManual"), lPos);
 		CString str;
 		str.Format(_T("%ld"), lPos);
 		m_stFocusValue.SetWindowText(str);
@@ -133,7 +136,7 @@ void CSettingsDlg::OnChAutoFocus()
 
 void CSettingsDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
-	if (!pScrollBar || !m_pCurrentWebCam)
+	if (!pScrollBar)
 	{
 		CDialogEx::OnHScroll(nSBCode, nPos, pScrollBar);
 		return;
@@ -145,7 +148,10 @@ void CSettingsDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 	{
 		long val = m_slFocus.GetPos();
 		m_chAutoFocus.SetCheck(BST_UNCHECKED);
-		m_pCurrentWebCam->SetFocus(val, CameraControl_Flags_Manual);
+		if (m_pCurrentWebCam)
+			m_pCurrentWebCam->SetFocus(val, CameraControl_Flags_Manual);
+		theApp.WriteProfileInt(REG_DEVICE, _T("FocusManual"), val);
+		theApp.WriteProfileInt(REG_DEVICE, _T("AutoFocus"), 0);
 		CString str;
 		str.Format(_T("%ld"), val);
 		m_stFocusValue.SetWindowText(str);
@@ -153,7 +159,9 @@ void CSettingsDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 	else if (hScrollBar == m_slBrightness.GetSafeHwnd())
 	{
 		long val = m_slBrightness.GetPos();
-		m_pCurrentWebCam->SetBrightness(val, VideoProcAmp_Flags_Manual);
+		if (m_pCurrentWebCam)
+			m_pCurrentWebCam->SetBrightness(val, VideoProcAmp_Flags_Manual);
+		theApp.WriteProfileInt(REG_DEVICE, _T("Brightness"), val);
 		CString str;
 		str.Format(_T("%ld"), val);
 		m_stBrightnessValue.SetWindowText(str);
@@ -161,7 +169,9 @@ void CSettingsDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 	else if (hScrollBar == m_slContrast.GetSafeHwnd())
 	{
 		long val = m_slContrast.GetPos();
-		m_pCurrentWebCam->SetContrast(val, VideoProcAmp_Flags_Manual);
+		if (m_pCurrentWebCam)
+			m_pCurrentWebCam->SetContrast(val, VideoProcAmp_Flags_Manual);
+		theApp.WriteProfileInt(REG_DEVICE, _T("Contrast"), val);
 		CString str;
 		str.Format(_T("%ld"), val);
 		m_stContrastValue.SetWindowText(str);
@@ -169,7 +179,9 @@ void CSettingsDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 	else if (hScrollBar == m_slSaturation.GetSafeHwnd())
 	{
 		long val = m_slSaturation.GetPos();
-		m_pCurrentWebCam->SetSaturation(val, VideoProcAmp_Flags_Manual);
+		if (m_pCurrentWebCam)
+			m_pCurrentWebCam->SetSaturation(val, VideoProcAmp_Flags_Manual);
+		theApp.WriteProfileInt(REG_DEVICE, _T("Saturation"), val);
 		CString str;
 		str.Format(_T("%ld"), val);
 		m_stSaturationValue.SetWindowText(str);
@@ -180,45 +192,58 @@ void CSettingsDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 
 void CSettingsDlg::OnBtResetImage()
 {
-	if (!m_pCurrentWebCam) return;
 	long lMin = 0, lMax = 0, lStep = 0, lDef = 0, lFlags = 0;
 
 	// Reset Focus
-	if (SUCCEEDED(m_pCurrentWebCam->GetFocusRange(lMin, lMax, lStep, lDef, lFlags)))
+	m_chAutoFocus.SetCheck(BST_CHECKED);
+	m_slFocus.EnableWindow(FALSE);
+	m_stFocusValue.SetWindowText(_T("Auto"));
+	theApp.WriteProfileInt(REG_DEVICE, _T("AutoFocus"), 1);
+	if (m_pCurrentWebCam && SUCCEEDED(m_pCurrentWebCam->GetFocusRange(lMin, lMax, lStep, lDef, lFlags)))
 	{
-		m_chAutoFocus.SetCheck(BST_CHECKED);
-		m_slFocus.EnableWindow(FALSE);
 		m_pCurrentWebCam->SetFocus(lDef, CameraControl_Flags_Auto);
 		m_slFocus.SetPos(lDef);
-		m_stFocusValue.SetWindowText(_T("Auto"));
+	}
+	else
+	{
+		m_slFocus.SetPos(50);
 	}
 
 	// Reset Brightness
-	if (SUCCEEDED(m_pCurrentWebCam->GetBrightnessRange(lMin, lMax, lStep, lDef, lFlags)))
+	long defBrightness = 0;
+	if (m_pCurrentWebCam && SUCCEEDED(m_pCurrentWebCam->GetBrightnessRange(lMin, lMax, lStep, lDef, lFlags)))
 	{
+		defBrightness = lDef;
 		m_pCurrentWebCam->SetBrightness(lDef, VideoProcAmp_Flags_Manual);
-		m_slBrightness.SetPos(lDef);
-		CString str; str.Format(_T("%ld"), lDef);
-		m_stBrightnessValue.SetWindowText(str);
 	}
+	m_slBrightness.SetPos(defBrightness);
+	theApp.WriteProfileInt(REG_DEVICE, _T("Brightness"), defBrightness);
+	CString str; str.Format(_T("%ld"), defBrightness);
+	m_stBrightnessValue.SetWindowText(str);
 
 	// Reset Contrast
-	if (SUCCEEDED(m_pCurrentWebCam->GetContrastRange(lMin, lMax, lStep, lDef, lFlags)))
+	long defContrast = 50;
+	if (m_pCurrentWebCam && SUCCEEDED(m_pCurrentWebCam->GetContrastRange(lMin, lMax, lStep, lDef, lFlags)))
 	{
+		defContrast = lDef;
 		m_pCurrentWebCam->SetContrast(lDef, VideoProcAmp_Flags_Manual);
-		m_slContrast.SetPos(lDef);
-		CString str; str.Format(_T("%ld"), lDef);
-		m_stContrastValue.SetWindowText(str);
 	}
+	m_slContrast.SetPos(defContrast);
+	theApp.WriteProfileInt(REG_DEVICE, _T("Contrast"), defContrast);
+	str.Format(_T("%ld"), defContrast);
+	m_stContrastValue.SetWindowText(str);
 
 	// Reset Saturation
-	if (SUCCEEDED(m_pCurrentWebCam->GetSaturationRange(lMin, lMax, lStep, lDef, lFlags)))
+	long defSaturation = 50;
+	if (m_pCurrentWebCam && SUCCEEDED(m_pCurrentWebCam->GetSaturationRange(lMin, lMax, lStep, lDef, lFlags)))
 	{
+		defSaturation = lDef;
 		m_pCurrentWebCam->SetSaturation(lDef, VideoProcAmp_Flags_Manual);
-		m_slSaturation.SetPos(lDef);
-		CString str; str.Format(_T("%ld"), lDef);
-		m_stSaturationValue.SetWindowText(str);
 	}
+	m_slSaturation.SetPos(defSaturation);
+	theApp.WriteProfileInt(REG_DEVICE, _T("Saturation"), defSaturation);
+	str.Format(_T("%ld"), defSaturation);
+	m_stSaturationValue.SetWindowText(str);
 }
 
 
@@ -239,95 +264,100 @@ BOOL CSettingsDlg::OnInitDialog()
 	OnChLogitechcontrol();
 
 	// Initialize Image & Optical sliders
-	if (m_pCurrentWebCam != nullptr)
+	long lMin = 0, lMax = 0, lStep = 0, lDef = 0, lFlags = 0, lVal = 0;
+
+	// Focus
+	if (m_pCurrentWebCam && SUCCEEDED(m_pCurrentWebCam->GetFocusRange(lMin, lMax, lStep, lDef, lFlags)))
 	{
-		long lMin = 0, lMax = 0, lStep = 0, lDef = 0, lFlags = 0, lVal = 0;
-
-		// Focus
-		if (SUCCEEDED(m_pCurrentWebCam->GetFocusRange(lMin, lMax, lStep, lDef, lFlags)))
+		m_slFocus.SetRange(lMin, lMax);
+		m_slFocus.SetLineSize(lStep > 0 ? lStep : 1);
+		if (SUCCEEDED(m_pCurrentWebCam->GetFocus(lVal, lFlags)))
 		{
-			m_slFocus.SetRange(lMin, lMax);
-			m_slFocus.SetLineSize(lStep > 0 ? lStep : 1);
-			if (SUCCEEDED(m_pCurrentWebCam->GetFocus(lVal, lFlags)))
-			{
-				m_slFocus.SetPos(lVal);
-				bool bAuto = (lFlags & CameraControl_Flags_Auto) != 0;
-				m_chAutoFocus.SetCheck(bAuto ? BST_CHECKED : BST_UNCHECKED);
-				m_slFocus.EnableWindow(bAuto ? FALSE : TRUE);
-				CString str;
-				if (bAuto) str = _T("Auto");
-				else str.Format(_T("%ld"), lVal);
-				m_stFocusValue.SetWindowText(str);
-			}
-		}
-		else
-		{
-			m_slFocus.EnableWindow(FALSE);
-			m_chAutoFocus.EnableWindow(FALSE);
-			m_stFocusValue.SetWindowText(_T("N/A"));
-		}
-
-		// Brightness
-		if (SUCCEEDED(m_pCurrentWebCam->GetBrightnessRange(lMin, lMax, lStep, lDef, lFlags)))
-		{
-			m_slBrightness.SetRange(lMin, lMax);
-			m_slBrightness.SetLineSize(lStep > 0 ? lStep : 1);
-			if (SUCCEEDED(m_pCurrentWebCam->GetBrightness(lVal, lFlags)))
-			{
-				m_slBrightness.SetPos(lVal);
-				CString str; str.Format(_T("%ld"), lVal);
-				m_stBrightnessValue.SetWindowText(str);
-			}
-		}
-		else
-		{
-			m_slBrightness.EnableWindow(FALSE);
-			m_stBrightnessValue.SetWindowText(_T("N/A"));
-		}
-
-		// Contrast
-		if (SUCCEEDED(m_pCurrentWebCam->GetContrastRange(lMin, lMax, lStep, lDef, lFlags)))
-		{
-			m_slContrast.SetRange(lMin, lMax);
-			m_slContrast.SetLineSize(lStep > 0 ? lStep : 1);
-			if (SUCCEEDED(m_pCurrentWebCam->GetContrast(lVal, lFlags)))
-			{
-				m_slContrast.SetPos(lVal);
-				CString str; str.Format(_T("%ld"), lVal);
-				m_stContrastValue.SetWindowText(str);
-			}
-		}
-		else
-		{
-			m_slContrast.EnableWindow(FALSE);
-			m_stContrastValue.SetWindowText(_T("N/A"));
-		}
-
-		// Saturation
-		if (SUCCEEDED(m_pCurrentWebCam->GetSaturationRange(lMin, lMax, lStep, lDef, lFlags)))
-		{
-			m_slSaturation.SetRange(lMin, lMax);
-			m_slSaturation.SetLineSize(lStep > 0 ? lStep : 1);
-			if (SUCCEEDED(m_pCurrentWebCam->GetSaturation(lVal, lFlags)))
-			{
-				m_slSaturation.SetPos(lVal);
-				CString str; str.Format(_T("%ld"), lVal);
-				m_stSaturationValue.SetWindowText(str);
-			}
-		}
-		else
-		{
-			m_slSaturation.EnableWindow(FALSE);
-			m_stSaturationValue.SetWindowText(_T("N/A"));
+			m_slFocus.SetPos(lVal);
+			bool bAuto = (lFlags & CameraControl_Flags_Auto) != 0;
+			m_chAutoFocus.SetCheck(bAuto ? BST_CHECKED : BST_UNCHECKED);
+			m_slFocus.EnableWindow(bAuto ? FALSE : TRUE);
+			CString str = bAuto ? _T("Auto") : _T("");
+			if (!bAuto) str.Format(_T("%ld"), lVal);
+			m_stFocusValue.SetWindowText(str);
 		}
 	}
 	else
 	{
-		m_slFocus.EnableWindow(FALSE);
-		m_chAutoFocus.EnableWindow(FALSE);
-		m_slBrightness.EnableWindow(FALSE);
-		m_slContrast.EnableWindow(FALSE);
-		m_slSaturation.EnableWindow(FALSE);
+		m_slFocus.SetRange(0, 100);
+		m_slFocus.SetLineSize(5);
+		int savedFocus = theApp.GetProfileInt(REG_DEVICE, _T("FocusManual"), 50);
+		int savedAF = theApp.GetProfileInt(REG_DEVICE, _T("AutoFocus"), 1);
+		m_slFocus.SetPos(savedFocus);
+		m_chAutoFocus.SetCheck(savedAF ? BST_CHECKED : BST_UNCHECKED);
+		m_slFocus.EnableWindow(!savedAF);
+		m_stFocusValue.SetWindowText(savedAF ? _T("Auto") : _T("50"));
+	}
+
+	// Brightness
+	if (m_pCurrentWebCam && SUCCEEDED(m_pCurrentWebCam->GetBrightnessRange(lMin, lMax, lStep, lDef, lFlags)))
+	{
+		m_slBrightness.SetRange(lMin, lMax);
+		m_slBrightness.SetLineSize(lStep > 0 ? lStep : 1);
+		if (SUCCEEDED(m_pCurrentWebCam->GetBrightness(lVal, lFlags)))
+		{
+			m_slBrightness.SetPos(lVal);
+			CString str; str.Format(_T("%ld"), lVal);
+			m_stBrightnessValue.SetWindowText(str);
+		}
+	}
+	else
+	{
+		m_slBrightness.SetRange(-64, 64);
+		m_slBrightness.SetLineSize(1);
+		int savedBright = theApp.GetProfileInt(REG_DEVICE, _T("Brightness"), 0);
+		m_slBrightness.SetPos(savedBright);
+		CString str; str.Format(_T("%d"), savedBright);
+		m_stBrightnessValue.SetWindowText(str);
+	}
+
+	// Contrast
+	if (m_pCurrentWebCam && SUCCEEDED(m_pCurrentWebCam->GetContrastRange(lMin, lMax, lStep, lDef, lFlags)))
+	{
+		m_slContrast.SetRange(lMin, lMax);
+		m_slContrast.SetLineSize(lStep > 0 ? lStep : 1);
+		if (SUCCEEDED(m_pCurrentWebCam->GetContrast(lVal, lFlags)))
+		{
+			m_slContrast.SetPos(lVal);
+			CString str; str.Format(_T("%ld"), lVal);
+			m_stContrastValue.SetWindowText(str);
+		}
+	}
+	else
+	{
+		m_slContrast.SetRange(0, 100);
+		m_slContrast.SetLineSize(1);
+		int savedContrast = theApp.GetProfileInt(REG_DEVICE, _T("Contrast"), 50);
+		m_slContrast.SetPos(savedContrast);
+		CString str; str.Format(_T("%d"), savedContrast);
+		m_stContrastValue.SetWindowText(str);
+	}
+
+	// Saturation
+	if (m_pCurrentWebCam && SUCCEEDED(m_pCurrentWebCam->GetSaturationRange(lMin, lMax, lStep, lDef, lFlags)))
+	{
+		m_slSaturation.SetRange(lMin, lMax);
+		m_slSaturation.SetLineSize(lStep > 0 ? lStep : 1);
+		if (SUCCEEDED(m_pCurrentWebCam->GetSaturation(lVal, lFlags)))
+		{
+			m_slSaturation.SetPos(lVal);
+			CString str; str.Format(_T("%ld"), lVal);
+			m_stSaturationValue.SetWindowText(str);
+		}
+	}
+	else
+	{
+		m_slSaturation.SetRange(0, 100);
+		m_slSaturation.SetLineSize(1);
+		int savedSat = theApp.GetProfileInt(REG_DEVICE, _T("Saturation"), 50);
+		m_slSaturation.SetPos(savedSat);
+		CString str; str.Format(_T("%d"), savedSat);
+		m_stSaturationValue.SetWindowText(str);
 	}
 
 	CenterWindow();

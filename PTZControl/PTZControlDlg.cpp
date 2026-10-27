@@ -310,6 +310,7 @@ void CPTZControlDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_BT_ZOOM_IN, m_btZoomIn);
 	DDX_Control(pDX, IDC_BT_ZOOM_OUT, m_btZoomOut);
 	DDX_Control(pDX, IDC_BT_FOCUS_AUTO, m_btFocusAuto);
+	DDX_Control(pDX, IDC_SL_FOCUS_MAIN, m_slFocusMain);
 	DDX_Control(pDX, IDC_BT_UP, m_btUp);
 	DDX_Control(pDX, IDC_BT_DOWN, m_btDown);
 	DDX_Control(pDX, IDC_BT_HOME, m_btHome);
@@ -338,6 +339,7 @@ BEGIN_MESSAGE_MAP(CPTZControlDlg, CDialogEx)
 	ON_WM_NCHITTEST()
 	ON_BN_CLICKED(IDC_BT_EXIT, &CPTZControlDlg::OnBtExit)
 	ON_WM_SETFOCUS()
+	ON_WM_VSCROLL()
 	ON_BN_CLICKED(IDC_BT_MEMORY, &CPTZControlDlg::OnBtMemory)
 	ON_COMMAND_EX(IDC_BT_WEBCAM1, &CPTZControlDlg::OnBtWebCam)
 	ON_COMMAND_EX(IDC_BT_WEBCAM2, &CPTZControlDlg::OnBtWebCam)
@@ -538,6 +540,11 @@ BOOL CPTZControlDlg::OnInitDialog()
 	for (auto &btn : m_btWebCam)
 		btn.SetCheckStyle();
 
+	// Initialize Focus Slider on main interface
+	m_slFocusMain.SetRange(0, 100);
+	m_slFocusMain.SetLineSize(5);
+	m_slFocusMain.SetPos(theApp.GetProfileInt(REG_DEVICE, _T("FocusManual"), 50));
+
 	//----------------------------------------------------------------------
 	// Save the current instance
 
@@ -616,6 +623,22 @@ BOOL CPTZControlDlg::OnInitDialog()
 		CString strMsg(MAKEINTRESOURCE(IDP_TXT_CAMERAS)), strText;
 		strText.FormatMessage(strMsg, strCameras.GetString());
 		AfxMessageBox(strText);
+	}
+
+	// Fallback to any connected camera if no Logitech PTZ camera was detected
+	if (m_iNumWebCams == 0)
+	{
+		for (int i = 0; i < aDevices.GetCount() && m_iNumWebCams < NUM_MAX_WEBCAMS; ++i)
+		{
+			CString strDevice = aDevices[i];
+			int iPos = strDevice.Find(_T('\t'));
+			if (iPos != -1)
+			{
+				CString strDevToken = strDevice.Mid(iPos + 1);
+				if (OpenWebCam(m_aWebCams[m_iNumWebCams], strDevToken))
+					++m_iNumWebCams;
+			}
+		}
 	}
 
 	// Check how many web cams we found
@@ -726,6 +749,23 @@ BOOL CPTZControlDlg::OnInitDialog()
 		{
 			SetActiveCam(i - 1);
 			OnBtHome();
+		}
+	}
+
+	// Update Focus slider with camera's actual values
+	if (m_iNumWebCams > 0)
+	{
+		long lMin = 0, lMax = 0, lStep = 0, lDef = 0, lFlags = 0, lVal = 0;
+		if (SUCCEEDED(GetCurrentWebCam().GetFocusRange(lMin, lMax, lStep, lDef, lFlags)))
+		{
+			m_slFocusMain.SetRange(lMin, lMax);
+			m_slFocusMain.SetLineSize(lStep > 0 ? lStep : 1);
+			if (SUCCEEDED(GetCurrentWebCam().GetFocus(lVal, lFlags)))
+			{
+				m_slFocusMain.SetPos(lVal);
+				bool bAuto = (lFlags & CameraControl_Flags_Auto) != 0;
+				m_btFocusAuto.SetCheck(bAuto ? 1 : 0);
+			}
 		}
 	}
 
@@ -1013,9 +1053,35 @@ void CPTZControlDlg::OnBtFocusAuto()
 	if (SUCCEEDED(GetCurrentWebCam().GetFocus(lVal, lFlags)))
 	{
 		bool bAuto = (lFlags & CameraControl_Flags_Auto) != 0;
-		GetCurrentWebCam().SetFocus(lVal, bAuto ? CameraControl_Flags_Manual : CameraControl_Flags_Auto);
-		m_btFocusAuto.SetCheck(!bAuto);
+		if (bAuto)
+		{
+			int pos = m_slFocusMain.GetPos();
+			GetCurrentWebCam().SetFocus(pos, CameraControl_Flags_Manual);
+			m_btFocusAuto.SetCheck(0);
+		}
+		else
+		{
+			GetCurrentWebCam().SetFocus(0, CameraControl_Flags_Auto);
+			m_btFocusAuto.SetCheck(1);
+		}
 	}
+	else
+	{
+		int isChecked = m_btFocusAuto.GetCheck();
+		m_btFocusAuto.SetCheck(!isChecked);
+	}
+}
+
+void CPTZControlDlg::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
+{
+	if (pScrollBar && pScrollBar->GetSafeHwnd() == m_slFocusMain.GetSafeHwnd())
+	{
+		int pos = m_slFocusMain.GetPos();
+		GetCurrentWebCam().SetFocus(pos, CameraControl_Flags_Manual);
+		m_btFocusAuto.SetCheck(0); // Manual slider movement turns off AF
+		theApp.WriteProfileInt(REG_DEVICE, _T("FocusManual"), pos);
+	}
+	__super::OnVScroll(nSBCode, nPos, pScrollBar);
 }
 
 void CPTZControlDlg::OnBtSettings()

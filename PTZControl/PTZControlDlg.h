@@ -105,6 +105,7 @@ protected:
 	CPTZButton m_btZoomIn;
 	CPTZButton m_btZoomOut;
 	CPTZButton m_btFocusAuto;
+	CSliderCtrl m_slFocusMain;
 	CPTZButton m_btUp;
 	CPTZButton m_btDown;
 	CPTZButton m_btHome;
@@ -173,6 +174,7 @@ protected:
 	afx_msg void OnBtZoomIn();
 	afx_msg void OnBtZoomOut();
 	afx_msg void OnBtFocusAuto();
+	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	afx_msg void OnBtUp();
 	afx_msg void OnBtLeft();
 	afx_msg void OnBtHome();

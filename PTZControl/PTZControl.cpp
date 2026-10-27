@@ -229,6 +229,11 @@ CPTZControlApp theApp;
 
 BOOL CPTZControlApp::InitInstance()
 {
+	INITCOMMONCONTROLSEX InitCtrls;
+	InitCtrls.dwSize = sizeof(InitCtrls);
+	InitCtrls.dwICC = ICC_WIN95_CLASSES | ICC_BAR_CLASSES;
+	InitCommonControlsEx(&InitCtrls);
+
 	CWinApp::InitInstance();
 
 	// Activate "Windows Native" visual manager for enabling themes in MFC controls

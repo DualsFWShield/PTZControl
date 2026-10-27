@@ -73,6 +73,7 @@
 #define IDC_SL_SATURATION               1037
 #define IDC_ST_SATURATION_VAL           1038
 #define IDC_BT_RESET_IMAGE              1039
+#define IDC_SL_FOCUS_MAIN               1045
 #define DC_BT_SETTINGS                  32791
 
 // Next default values for new objects
