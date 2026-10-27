@@ -4,15 +4,26 @@ on:
   push:
     tags:
       - 'v*'
+    branches:
+      - main
+      - master
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build-x64:
+    name: Build Release (x64)
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
     - name: Setup MSBuild path
-      uses: microsoft/setup-msbuild@v1.0.2
+      uses: microsoft/setup-msbuild@v2
 
     - name: Restore NuGet packages
       run: nuget restore PTZControl/PTZControl.sln
@@ -27,12 +38,14 @@ jobs:
         path: ${{ github.workspace }}\PTZControl\x64\Release\PTZControl.exe
 
   build-x86:
+    name: Build Release (x86)
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
     - name: Setup MSBuild path
-      uses: microsoft/setup-msbuild@v1.0.2
+      uses: microsoft/setup-msbuild@v2
 
     - name: Restore NuGet packages
       run: nuget restore PTZControl/PTZControl.sln
@@ -47,57 +60,71 @@ jobs:
         path: ${{ github.workspace }}\PTZControl\Release\PTZControl.exe
 
   create-release:
+    name: Publish to GitHub Releases
     needs: [build-x64, build-x86]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
     steps:
-      - uses: actions/checkout@v2
-  
-      - name: Extract Tag Name
-        id: tagname
-        run: echo "TAG_NAME=$(echo ${{ github.ref }} | sed 's/refs\/tags\///')" >> $GITHUB_ENV
-  
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Determine Tag and Release Information
+        id: meta
+        shell: bash
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            TAG="${{ github.ref_name }}"
+            TITLE="PTZControl ${{ github.ref_name }}"
+            PRERELEASE="false"
+          elif [ "${{ github.event_name }}" = "release" ]; then
+            TAG="${{ github.event.release.tag_name }}"
+            TITLE="${{ github.event.release.name || github.event.release.tag_name }}"
+            PRERELEASE="${{ github.event.release.prerelease }}"
+          else
+            TAG="latest"
+            TITLE="PTZControl Latest Release"
+            PRERELEASE="false"
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "title=${TITLE}" >> "$GITHUB_OUTPUT"
+          echo "prerelease=${PRERELEASE}" >> "$GITHUB_OUTPUT"
+
       - name: Download x64 artifact
         uses: actions/download-artifact@v4
         with:
           name: PTZControl-x64
-  
-      - name: Move x64 Artifact
-        run: |
-          mkdir -p PTZControl-${{ env.TAG_NAME }}/x64
-          mv ./PTZControl.exe PTZControl-${{ env.TAG_NAME }}/x64/
-  
+          path: ./dist-x64
+
       - name: Download x86 artifact
         uses: actions/download-artifact@v4
         with:
           name: PTZControl-x86
-  
-      - name: Move x86 Artifact
+          path: ./dist-x86
+
+      - name: Prepare Release Executables and Archive
+        shell: bash
         run: |
-          mkdir -p PTZControl-${{ env.TAG_NAME }}/x86
-          mv ./PTZControl.exe PTZControl-${{ env.TAG_NAME }}/x86/
-  
-      - name: Zip Files
-        run: zip -r PTZControl.zip PTZControl-${{ env.TAG_NAME }}
-  
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
+          # Copy standalone .exe files for direct release download
+          cp ./dist-x64/PTZControl.exe ./PTZControl-x64.exe
+          cp ./dist-x86/PTZControl.exe ./PTZControl-x86.exe
+
+          # Create comprehensive zip bundle with folder structure
+          mkdir -p ./bundle/x64 ./bundle/x86
+          cp ./PTZControl-x64.exe ./bundle/x64/PTZControl.exe
+          cp ./PTZControl-x86.exe ./bundle/x86/PTZControl.exe
+          [ -f README.md ] && cp README.md ./bundle/
+          [ -f LICENSE ] && cp LICENSE ./bundle/
+          (cd ./bundle && zip -r ../PTZControl.zip .)
+
+      - name: Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: ${{ steps.meta.outputs.title }}
+          prerelease: ${{ steps.meta.outputs.prerelease == 'true' }}
+          files: |
+            ./PTZControl-x64.exe
+            ./PTZControl-x86.exe
+            ./PTZControl.zip
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ env.TAG_NAME }}
-          release_name: PTZControl ${{ env.TAG_NAME }}
-          draft: false
-          prerelease: false
-  
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./PTZControl.zip
-          asset_name: PTZControl.zip
-          asset_content_type: application/zip
-      

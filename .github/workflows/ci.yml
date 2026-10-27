@@ -1,23 +1,40 @@
 name: Build PTZControl Project
 
-on: [push]
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
     strategy:
       matrix:
-        configuration: [Debug]
+        configuration: [Debug, Release]
         platform: [x86, x64]
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
     - name: Setup MSBuild path
-      uses: microsoft/setup-msbuild@v1.0.2
+      uses: microsoft/setup-msbuild@v2
 
     - name: Restore NuGet packages
       run: nuget restore PTZControl/PTZControl.sln
 
     - name: Build the PTZControl project
       run: msbuild PTZControl/PTZControl.sln /p:Configuration=${{ matrix.configuration }} /p:Platform=${{ matrix.platform }}
+
+    - name: Upload build artifact
+      if: matrix.configuration == 'Release'
+      uses: actions/upload-artifact@v4
+      with:
+        name: PTZControl-${{ matrix.platform }}-${{ matrix.configuration }}
+        path: |
+          PTZControl/**/Release/PTZControl.exe
+          PTZControl/Release/PTZControl.exe
+          PTZControl/x64/Release/PTZControl.exe
+        if-no-files-found: ignore
