@@ -1,0 +1,369 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifndef APSTUDIO_INVOKED
+#include "targetver.h"
+#endif
+#include "afxres.h"
+#include "verrsrc.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// German (Germany) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_DEU)
+LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
+#pragma code_page(1252)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#include ""targetver.h""\r\n"
+    "#endif\r\n"
+    "#include ""afxres.h""\r\n"
+    "#include ""verrsrc.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#include ""res\\PTZControl.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""      // Standard components\r\n"
+    "#if !defined(_AFXDLL)\r\n"
+    "#include ""afxribbon.rc""   // MFC ribbon and control bar resources\r\n"
+    "#endif\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "res\\PTZControl.ico"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BUTTONS             BITMAP                  "res\\CameraControl.bmp"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_ACCELERATOR ACCELERATORS
+BEGIN
+    VK_DOWN,        IDC_BT_DOWN,            VIRTKEY, NOINVERT
+    VK_HOME,        IDC_BT_HOME,            VIRTKEY, NOINVERT
+    VK_NUMPAD0,     IDC_BT_HOME,            VIRTKEY, NOINVERT
+    VK_RETURN,      IDC_BT_HOME,            VIRTKEY, NOINVERT
+    VK_LEFT,        IDC_BT_LEFT,            VIRTKEY, NOINVERT
+    "M",            IDC_BT_MEMORY,          VIRTKEY, NOINVERT
+    "1",            IDC_BT_PRESET1,         VIRTKEY, NOINVERT
+    VK_NUMPAD1,     IDC_BT_PRESET1,         VIRTKEY, NOINVERT
+    "2",            IDC_BT_PRESET2,         VIRTKEY, NOINVERT
+    VK_NUMPAD2,     IDC_BT_PRESET2,         VIRTKEY, NOINVERT
+    "3",            IDC_BT_PRESET3,         VIRTKEY, NOINVERT
+    VK_NUMPAD3,     IDC_BT_PRESET3,         VIRTKEY, NOINVERT
+    "4",            IDC_BT_PRESET4,         VIRTKEY, NOINVERT
+    VK_NUMPAD4,     IDC_BT_PRESET4,         VIRTKEY, NOINVERT
+    "5",            IDC_BT_PRESET5,         VIRTKEY, NOINVERT
+    VK_NUMPAD5,     IDC_BT_PRESET5,         VIRTKEY, NOINVERT
+    "6",            IDC_BT_PRESET6,         VIRTKEY, NOINVERT
+    VK_NUMPAD6,     IDC_BT_PRESET6,         VIRTKEY, NOINVERT
+    "7",            IDC_BT_PRESET7,         VIRTKEY, NOINVERT
+    VK_NUMPAD7,     IDC_BT_PRESET7,         VIRTKEY, NOINVERT
+    "8",            IDC_BT_PRESET8,         VIRTKEY, NOINVERT
+    VK_NUMPAD8,     IDC_BT_PRESET8,         VIRTKEY, NOINVERT
+    VK_RIGHT,       IDC_BT_RIGHT,           VIRTKEY, NOINVERT
+    VK_DIVIDE,      IDC_BT_SETTINGS,        VIRTKEY, NOINVERT
+    VK_MULTIPLY,    IDC_BT_SETTINGS,        VIRTKEY, NOINVERT
+    VK_UP,          IDC_BT_UP,              VIRTKEY, NOINVERT
+    "1",            IDC_BT_WEBCAM1,         VIRTKEY, ALT, NOINVERT
+    VK_NUMPAD1,     IDC_BT_WEBCAM1,         VIRTKEY, ALT, NOINVERT
+    VK_PRIOR,       IDC_BT_WEBCAM1,         VIRTKEY, ALT, NOINVERT
+    "2",            IDC_BT_WEBCAM2,         VIRTKEY, ALT, NOINVERT
+    VK_NEXT,        IDC_BT_WEBCAM2,         VIRTKEY, ALT, NOINVERT
+    VK_NUMPAD2,     IDC_BT_WEBCAM2,         VIRTKEY, ALT, NOINVERT
+    VK_ADD,         IDC_BT_ZOOM_IN,         VIRTKEY, NOINVERT
+    VK_OEM_PLUS,    IDC_BT_ZOOM_IN,         VIRTKEY, NOINVERT
+    VK_PRIOR,       IDC_BT_ZOOM_IN,         VIRTKEY, NOINVERT
+    VK_NEXT,        IDC_BT_ZOOM_OUT,        VIRTKEY, NOINVERT
+    VK_OEM_MINUS,   IDC_BT_ZOOM_OUT,        VIRTKEY, NOINVERT
+    VK_SUBTRACT,    IDC_BT_ZOOM_OUT,        VIRTKEY, NOINVERT
+    "3",            IDC_BT_WEBCAM3,         VIRTKEY, ALT, NOINVERT
+    VK_NEXT,        IDC_BT_WEBCAM3,         VIRTKEY, ALT, NOINVERT
+    VK_NUMPAD3,     IDC_BT_WEBCAM3,         VIRTKEY, ALT, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDP_ERR_NO_CAMERA       "No matching camera can be found or is connected!\nLogitech PTZ 2 Pro and Rally cameras are supported by default!"
+    IDP_ERR_OPENFAILED      "Unable to open the camera device!"
+    IDP_TXT_CAMERAS         "Available cameras:\r\n%1"
+END
+
+#endif    // German (Germany) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_PTZCONTROL DIALOGEX 0, 0, 174, 56
+STYLE DS_SETFONT | DS_SETFOREGROUND | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_BORDER
+EXSTYLE WS_EX_TOPMOST | WS_EX_APPWINDOW
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "&+",IDC_BT_ZOOM_IN,5,7,16,14,WS_GROUP | NOT WS_TABSTOP
+    PUSHBUTTON      "AF",IDC_BT_FOCUS_AUTO,5,21,16,14,WS_GROUP | NOT WS_TABSTOP
+    PUSHBUTTON      "&-",IDC_BT_ZOOM_OUT,5,35,16,14,WS_GROUP | NOT WS_TABSTOP
+    PUSHBUTTON      "&L",IDC_BT_LEFT,26,21,16,14,WS_GROUP | NOT WS_TABSTOP
+    PUSHBUTTON      "&R",IDC_BT_RIGHT,58,21,16,14,WS_GROUP | NOT WS_TABSTOP
+    PUSHBUTTON      "&U",IDC_BT_UP,42,7,16,14,WS_GROUP | NOT WS_TABSTOP
+    PUSHBUTTON      "&D",IDC_BT_DOWN,42,35,16,14,WS_GROUP | NOT WS_TABSTOP
+    PUSHBUTTON      "&H",IDC_BT_HOME,42,21,16,14,WS_GROUP | NOT WS_TABSTOP
+    PUSHBUTTON      "&1",IDC_BT_PRESET1,80,7,16,14,WS_GROUP | NOT WS_TABSTOP
+    PUSHBUTTON      "&2",IDC_BT_PRESET2,96,7,16,14,WS_GROUP | NOT WS_TABSTOP
+    PUSHBUTTON      "&3",IDC_BT_PRESET3,112,7,16,14,WS_GROUP | NOT WS_TABSTOP
+    PUSHBUTTON      "&4",IDC_BT_PRESET4,80,21,16,14,WS_GROUP | NOT WS_TABSTOP
+    PUSHBUTTON      "&5",IDC_BT_PRESET5,96,21,16,14,WS_GROUP | NOT WS_TABSTOP
+    PUSHBUTTON      "&6",IDC_BT_PRESET6,112,21,16,14,WS_GROUP | NOT WS_TABSTOP
+    PUSHBUTTON      "&7",IDC_BT_PRESET7,80,35,16,14,WS_GROUP | NOT WS_TABSTOP
+    PUSHBUTTON      "&8",IDC_BT_PRESET8,96,35,16,14,WS_GROUP | NOT WS_TABSTOP
+    PUSHBUTTON      "&M",IDC_BT_MEMORY,112,35,16,14,WS_GROUP | NOT WS_TABSTOP
+    PUSHBUTTON      "C&1",IDC_BT_WEBCAM1,134,7,16,14,WS_GROUP | NOT WS_TABSTOP
+    PUSHBUTTON      "C&2",IDC_BT_WEBCAM2,134,21,16,14,WS_GROUP | NOT WS_TABSTOP
+    PUSHBUTTON      "&S",IDC_BT_SETTINGS,152,21,16,14,WS_GROUP | NOT WS_TABSTOP
+    PUSHBUTTON      "&E",IDC_BT_EXIT,152,7,16,14,WS_GROUP | NOT WS_TABSTOP
+    PUSHBUTTON      "C&3",IDC_BT_WEBCAM3,134,35,16,14,WS_GROUP | NOT WS_TABSTOP
+END
+
+IDD_SETTINGS DIALOGEX 0, 0, 433, 334
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "PTZControl Settings"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "Use Logitech Camera Motion Control",IDC_CH_LOGITECHCONTROL,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,24,313,12
+    LTEXT           "Motor Interval:",IDC_STATIC,17,42,65,8
+    EDITTEXT        IDC_ED_MOTORTIME,91,40,40,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "msec (Default=70msec)",IDC_STATIC,142,42,100,8
+    LTEXT           "Tooltip for Position &1:",IDC_STATIC,7,70,80,8
+    EDITTEXT        IDC_ED_TOOLTIP_1_1,92,68,100,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ED_TOOLTIP_2_1,206,69,100,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ED_TOOLTIP_3_1,321,69,100,12,ES_AUTOHSCROLL
+    LTEXT           "Tooltip for Position &2:",IDC_STATIC,7,86,80,8
+    EDITTEXT        IDC_ED_TOOLTIP_1_2,92,84,100,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ED_TOOLTIP_2_2,206,85,100,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ED_TOOLTIP_3_2,321,85,100,12,ES_AUTOHSCROLL
+    LTEXT           "Tooltip for Position &3:",IDC_STATIC,7,102,80,8
+    EDITTEXT        IDC_ED_TOOLTIP_1_3,92,100,100,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ED_TOOLTIP_2_3,206,101,100,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ED_TOOLTIP_3_3,321,101,100,12,ES_AUTOHSCROLL
+    LTEXT           "Tooltip for Position &4:",IDC_STATIC,7,118,80,8
+    EDITTEXT        IDC_ED_TOOLTIP_1_4,92,116,100,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ED_TOOLTIP_2_4,206,117,100,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ED_TOOLTIP_3_4,321,117,100,12,ES_AUTOHSCROLL
+    LTEXT           "Tooltip for Position &5:",IDC_STATIC,7,134,80,8
+    EDITTEXT        IDC_ED_TOOLTIP_1_5,92,132,100,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ED_TOOLTIP_2_5,206,133,100,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ED_TOOLTIP_3_5,321,133,100,12,ES_AUTOHSCROLL
+    LTEXT           "Tooltip for Position &6:",IDC_STATIC,7,150,80,8
+    EDITTEXT        IDC_ED_TOOLTIP_1_6,92,148,100,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ED_TOOLTIP_2_6,206,149,100,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ED_TOOLTIP_3_6,321,149,100,12,ES_AUTOHSCROLL
+    LTEXT           "Tooltip for Position &7:",IDC_STATIC,7,166,80,8
+    EDITTEXT        IDC_ED_TOOLTIP_1_7,92,164,100,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ED_TOOLTIP_2_7,206,165,100,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ED_TOOLTIP_3_7,321,165,100,12,ES_AUTOHSCROLL
+    LTEXT           "Tooltip for Position &8:",IDC_STATIC,7,182,80,8
+    EDITTEXT        IDC_ED_TOOLTIP_1_8,92,180,100,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ED_TOOLTIP_2_8,206,181,100,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ED_TOOLTIP_3_8,321,181,100,12,ES_AUTOHSCROLL
+    GROUPBOX        "Image & Optical Adjustments (Focus, Luminosite, Contraste, Saturation)",IDC_STATIC,7,202,419,102
+    LTEXT           "Focus:",IDC_STATIC,17,218,45,8
+    CONTROL         "Auto",IDC_CH_AUTOFOCUS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,68,217,32,10
+    CONTROL         "",IDC_SL_FOCUS,"msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP,105,215,260,14
+    RTEXT           "0",IDC_ST_FOCUS_VAL,370,218,45,8
+    LTEXT           "Luminosite:",IDC_STATIC,17,238,45,8
+    CONTROL         "",IDC_SL_BRIGHTNESS,"msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP,105,235,260,14
+    RTEXT           "0",IDC_ST_BRIGHTNESS_VAL,370,238,45,8
+    LTEXT           "Contraste:",IDC_STATIC,17,258,45,8
+    CONTROL         "",IDC_SL_CONTRAST,"msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP,105,255,260,14
+    RTEXT           "0",IDC_ST_CONTRAST_VAL,370,258,45,8
+    LTEXT           "Saturation:",IDC_STATIC,17,278,45,8
+    CONTROL         "",IDC_SL_SATURATION,"msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP,105,275,260,14
+    RTEXT           "0",IDC_ST_SATURATION_VAL,370,278,45,8
+    PUSHBUTTON      "Reset Image",IDC_BT_RESET_IMAGE,17,312,65,14
+    DEFPUSHBUTTON   "OK",IDOK,158,312,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,224,312,50,14
+    EDITTEXT        IDC_ED_CAMERA,6,7,318,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_TABSTOP
+    GROUPBOX        "Camera 1",IDC_STATIC,86,58,111,140
+    GROUPBOX        "Camera 2",IDC_STATIC,201,58,111,140
+    GROUPBOX        "Camera 3",IDC_STATIC,317,57,111,140
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 3,0,1,46
+ PRODUCTVERSION 3,0,1,46
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName", "MRi - Software Development"
+            VALUE "FileDescription", "PTZControl - Controler for a Logitech PTZ Pro, PTZ Pro 2, Rally Plus, Logi Group cameras and others"
+            VALUE "FileVersion", "3.0.1.46"
+            VALUE "InternalName", "PTZControl.exe"
+            VALUE "LegalCopyright", "(c) Martin Richter - Gelnhausen - Germany"
+            VALUE "OriginalFilename", "PTZControl.exe"
+            VALUE "ProductName", "PTZ-Control for Logitech PTZ cameras"
+            VALUE "ProductVersion", "3.0.1.46"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_PTZCONTROL, DIALOG
+    BEGIN
+        LEFTMARGIN, 2
+        RIGHTMARGIN, 167
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 49
+        HORZGUIDE, 21
+        HORZGUIDE, 35
+    END
+
+    IDD_SETTINGS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 379
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 217
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_PTZCONTROL AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_SETTINGS AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+#endif    // English (United States) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE 9, 1
+#include "res\PTZControl.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"      // Standard components
+#if !defined(_AFXDLL)
+#include "afxribbon.rc"   // MFC ribbon and control bar resources
+#endif
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
