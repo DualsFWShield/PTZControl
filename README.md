@@ -41,7 +41,10 @@ This small program was originally designed to control a Logitech PTZ 2 Pro purch
 - **Logitech CSRK Extension Units**:
   - Hardware preset storage and recall.
   - Native step-by-step Pan/Tilt control via Logitech Lync extension interfaces.
-- **Environment**: Native C++ with MFC and ATL (Visual Studio / MSBuild). No external runtime dependencies or installer needed.
+- **Environment**: Modern Rust implementation (`RustControl/`) using `eframe`/`egui` and direct Windows COM/DirectShow bindings via the official `windows` crate. Legacy C++/MFC version is preserved in `PTZControl/`. No external runtime dependencies or installer needed.
+- **Customizable Global Hotkeys**: Intercepted system-wide via a hidden message window even when the application is not focused, fully editable in the Settings dialog.
+- **Invertible Pan/Tilt/Zoom/Focus Axes**: Easily invert any motion axis for inverted or ceiling-mounted camera rigs.
+- **JSON Configuration**: Stored cleanly in `%APPDATA%\PTZControl\config.json` instead of registry hives.
 
 ---
 
@@ -125,13 +128,43 @@ Command-line parameters allow control from external automation tools such as **B
 
 ---
 
-## Registry Settings
+## Configuration & Persistence
 
-All configurations are stored under:
-```text
-HKEY_CURRENT_USER\SOFTWARE\MRi-Software\PTZControl
-```
-- **Options\NoReset**: `1` to keep camera position on startup, `0` to reset to home (default).
-- **Options\NoGuard**: `1` to disable the USB guard watchdog thread, `0` to keep active (default).
-- **Window**: Stores screen coordinates (`PosX`, `PosY`) and custom preset tooltip labels.
-- **Device**: Stores last manual focus and camera adjustment values.
+In the modern Rust edition, configuration is persisted in a clean, human-readable JSON file:
+`	ext
+%APPDATA%\PTZControl\config.json
+`
+(Can also be overridden with the PTZCONTROL_CONFIG environment variable).
+
+It contains:
+- **General**: lways_on_top, eset_on_start, guard watchdog, use_logitech_motion, motor_interval_ms, device_tokens.
+- **Axes**: invert_pan, invert_tilt, invert_zoom, invert_focus for ceiling-mounted or mirrored setups.
+- **Presets**: Custom tooltip labels for all 8 presets across up to 3 cameras.
+- **Hotkeys**: Full user-customizable bindings for all actions and camera selections.
+- **Window**: Remembers and restores window coordinates.
+
+*(The legacy C++ edition used HKEY_CURRENT_USER\SOFTWARE\MRi-Software\PTZControl).*
+
+---
+
+## Building from Source
+
+### Rust Edition (RustControl/)
+Prerequisites: Rust stable toolchain (x86_64-pc-windows-msvc or i686-pc-windows-msvc).
+``powershell
+cd RustControl
+
+# Build 64-bit release binary
+cargo build --release --target x86_64-pc-windows-msvc
+
+# Build 32-bit release binary
+rustup target add i686-pc-windows-msvc
+cargo build --release --target i686-pc-windows-msvc
+``
+
+### Legacy C++ Edition (PTZControl/)
+Built with Visual Studio / MSBuild:
+``powershell
+msbuild PTZControl/PTZControl.sln /p:Configuration=Release /p:Platform=x64
+msbuild PTZControl/PTZControl.sln /p:Configuration=Release /p:Platform=x86
+``

@@ -15,53 +15,53 @@ permissions:
   contents: write
 
 jobs:
-  build-x64:
+  build-rust-x64:
     name: Build Release (x64)
     runs-on: windows-latest
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Setup MSBuild path
-      uses: microsoft/setup-msbuild@v2
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
 
-    - name: Restore NuGet packages
-      run: nuget restore PTZControl/PTZControl.sln
+      - name: Build PTZControl (x64)
+        run: cargo build --release --target x86_64-pc-windows-msvc
+        working-directory: RustControl
 
-    - name: Build the PTZControl project (x64)
-      run: msbuild PTZControl/PTZControl.sln /p:Configuration=Release /p:Platform=x64
+      - name: Upload PTZControl (x64) artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PTZControl-x64
+          path: RustControl/target/x86_64-pc-windows-msvc/release/PTZControl.exe
 
-    - name: Upload PTZControl (x64) as artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: PTZControl-x64
-        path: ${{ github.workspace }}\PTZControl\x64\Release\PTZControl.exe
-
-  build-x86:
+  build-rust-x86:
     name: Build Release (x86)
     runs-on: windows-latest
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Setup MSBuild path
-      uses: microsoft/setup-msbuild@v2
+      - name: Set up Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: i686-pc-windows-msvc
 
-    - name: Restore NuGet packages
-      run: nuget restore PTZControl/PTZControl.sln
+      - name: Build PTZControl (x86)
+        run: cargo build --release --target i686-pc-windows-msvc
+        working-directory: RustControl
 
-    - name: Build the PTZControl project (x86)
-      run: msbuild PTZControl/PTZControl.sln /p:Configuration=Release /p:Platform=x86
-
-    - name: Upload PTZControl (x86) as artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: PTZControl-x86
-        path: ${{ github.workspace }}\PTZControl\Release\PTZControl.exe
+      - name: Upload PTZControl (x86) artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PTZControl-x86
+          path: RustControl/target/i686-pc-windows-msvc/release/PTZControl.exe
 
   create-release:
     name: Publish to GitHub Releases
-    needs: [build-x64, build-x86]
+    needs: [build-rust-x64, build-rust-x86]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
