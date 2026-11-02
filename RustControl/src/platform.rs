@@ -122,7 +122,7 @@ impl Platform {
                             return;
                         }
                     };
-                    SetWindowLongPtrW(hwnd, GWLP_USERDATA, state_ptr as isize);
+                    set_window_user_data(hwnd, state_ptr);
                     let _ = ready_tx.send(Ok(hwnd.0 as isize));
 
                     let mut msg = MSG::default();
@@ -192,6 +192,26 @@ impl Drop for Platform {
     }
 }
 
+#[inline]
+unsafe fn set_window_user_data(hwnd: HWND, ptr: *mut PlatformState) {
+    #[cfg(target_pointer_width = "64")]
+    SetWindowLongPtrW(hwnd, GWLP_USERDATA, ptr as isize);
+    #[cfg(target_pointer_width = "32")]
+    SetWindowLongPtrW(hwnd, GWLP_USERDATA, ptr as i32);
+}
+
+#[inline]
+unsafe fn get_window_user_data(hwnd: HWND) -> *mut PlatformState {
+    #[cfg(target_pointer_width = "64")]
+    {
+        GetWindowLongPtrW(hwnd, GWLP_USERDATA) as *mut PlatformState
+    }
+    #[cfg(target_pointer_width = "32")]
+    {
+        GetWindowLongPtrW(hwnd, GWLP_USERDATA) as usize as *mut PlatformState
+    }
+}
+
 unsafe extern "system" fn wnd_proc(
     hwnd: HWND,
     msg: u32,
@@ -200,7 +220,7 @@ unsafe extern "system" fn wnd_proc(
 ) -> LRESULT {
     match msg {
         WM_HOTKEY => {
-            let state_ptr = GetWindowLongPtrW(hwnd, GWLP_USERDATA) as *mut PlatformState;
+            let state_ptr = get_window_user_data(hwnd);
             if !state_ptr.is_null() {
                 let state = &*state_ptr;
                 let id = wparam.0 as i32;
@@ -215,7 +235,7 @@ unsafe extern "system" fn wnd_proc(
             if !cds.lpData.is_null() && cds.cbData > 0 {
                 let bytes = std::slice::from_raw_parts(cds.lpData as *const u8, cds.cbData as usize);
                 if let Some(message) = cli::decode(bytes) {
-                    let state_ptr = GetWindowLongPtrW(hwnd, GWLP_USERDATA) as *mut PlatformState;
+                    let state_ptr = get_window_user_data(hwnd);
                     if !state_ptr.is_null() {
                         let state = &*state_ptr;
                         let _ = state.tx.send(PlatformEvent::Message(message));
@@ -225,7 +245,7 @@ unsafe extern "system" fn wnd_proc(
             LRESULT(1)
         }
         WM_RELOAD_HOTKEYS => {
-            let state_ptr = GetWindowLongPtrW(hwnd, GWLP_USERDATA) as *mut PlatformState;
+            let state_ptr = get_window_user_data(hwnd);
             if !state_ptr.is_null() {
                 reload_hotkeys(&mut *state_ptr, hwnd);
             }
