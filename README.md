@@ -23,7 +23,7 @@ A lightweight, always-on-top Windows application to control Pan-Tilt-Zoom (PTZ) 
 - **Broad Camera Compatibility**: Automatically detects Logitech PTZ 2 Pro, PTZ Pro, Rally, Group, and ConferenceCam CC3000e, with fallback discovery for standard DirectShow / USB webcams.
 - **Hotkeys & Remote Triggers**: Local and global hotkeys, plus extensive command-line parameters for Bitfocus Companion and Elgato Stream Deck integration.
 - **Watchdog Guard Thread**: Detects USB bus or driver freezes and safely terminates to prevent blocking your production workflow.
-- **Standalone Portable Binaries**: No installation required; available in x64 and x86.
+- **Standalone Portable Binary**: No installation required; standalone 64-bit Windows executable.
 
 ---
 
@@ -150,21 +150,16 @@ It contains:
 ## Building from Source
 
 ### Rust Edition (RustControl/)
-Prerequisites: Rust stable toolchain (x86_64-pc-windows-msvc or i686-pc-windows-msvc).
-``powershell
+Prerequisites: Rust stable toolchain (x86_64-pc-windows-msvc).
+`powershell
 cd RustControl
 
 # Build 64-bit release binary
-cargo build --release --target x86_64-pc-windows-msvc
-
-# Build 32-bit release binary
-rustup target add i686-pc-windows-msvc
-cargo build --release --target i686-pc-windows-msvc
-``
+cargo build --release
+`
 
 ### Legacy C++ Edition (PTZControl/)
 Built with Visual Studio / MSBuild:
-``powershell
+`powershell
 msbuild PTZControl/PTZControl.sln /p:Configuration=Release /p:Platform=x64
-msbuild PTZControl/PTZControl.sln /p:Configuration=Release /p:Platform=x86
-``
+`

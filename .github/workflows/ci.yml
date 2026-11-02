@@ -9,11 +9,8 @@ on:
 
 jobs:
   rust-build:
-    name: Rust Build (${{ matrix.target }})
+    name: Rust Build (x64)
     runs-on: windows-latest
-    strategy:
-      matrix:
-        target: [x86_64-pc-windows-msvc, i686-pc-windows-msvc]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -21,12 +18,12 @@ jobs:
       - name: Set up Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.target }}
+          targets: x86_64-pc-windows-msvc
 
       - name: Cargo check
-        run: cargo check --target ${{ matrix.target }}
+        run: cargo check --target x86_64-pc-windows-msvc
         working-directory: RustControl
 
       - name: Cargo build (Release)
-        run: cargo build --release --target ${{ matrix.target }}
+        run: cargo build --release --target x86_64-pc-windows-msvc
         working-directory: RustControl

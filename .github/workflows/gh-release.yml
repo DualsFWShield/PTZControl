@@ -34,31 +34,9 @@ jobs:
           name: PTZControl-x64
           path: RustControl/target/x86_64-pc-windows-msvc/release/PTZControl.exe
 
-  build-rust-x86:
-    name: Build Release (x86)
-    runs-on: windows-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: i686-pc-windows-msvc
-
-      - name: Build PTZControl (x86)
-        run: cargo build --release --target i686-pc-windows-msvc
-        working-directory: RustControl
-
-      - name: Upload PTZControl (x86) artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: PTZControl-x86
-          path: RustControl/target/i686-pc-windows-msvc/release/PTZControl.exe
-
   create-release:
     name: Publish to GitHub Releases
-    needs: [build-rust-x64, build-rust-x86]
+    needs: [build-rust-x64]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -91,23 +69,16 @@ jobs:
           name: PTZControl-x64
           path: ./dist-x64
 
-      - name: Download x86 artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: PTZControl-x86
-          path: ./dist-x86
-
       - name: Prepare Release Executables and Archive
         shell: bash
         run: |
-          # Copy standalone .exe files for direct release download
+          # Standalone executable
+          cp ./dist-x64/PTZControl.exe ./PTZControl.exe
           cp ./dist-x64/PTZControl.exe ./PTZControl-x64.exe
-          cp ./dist-x86/PTZControl.exe ./PTZControl-x86.exe
 
-          # Create comprehensive zip bundle with folder structure
-          mkdir -p ./bundle/x64 ./bundle/x86
-          cp ./PTZControl-x64.exe ./bundle/x64/PTZControl.exe
-          cp ./PTZControl-x86.exe ./bundle/x86/PTZControl.exe
+          # Zip bundle
+          mkdir -p ./bundle
+          cp ./dist-x64/PTZControl.exe ./bundle/PTZControl.exe
           [ -f README.md ] && cp README.md ./bundle/
           [ -f LICENSE ] && cp LICENSE ./bundle/
           (cd ./bundle && zip -r ../PTZControl.zip .)
@@ -119,8 +90,8 @@ jobs:
           name: ${{ steps.meta.outputs.title }}
           prerelease: ${{ steps.meta.outputs.prerelease == 'true' }}
           files: |
+            ./PTZControl.exe
             ./PTZControl-x64.exe
-            ./PTZControl-x86.exe
             ./PTZControl.zip
           generate_release_notes: true
         env:
