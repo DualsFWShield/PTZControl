@@ -74,8 +74,8 @@ fn main() -> eframe::Result<()> {
     let mut viewport = egui::ViewportBuilder::default()
         .with_title(APP_TITLE)
         .with_decorations(false)
-        .with_inner_size([320.0, 108.0])
-        .with_min_inner_size([280.0, 95.0])
+        .with_inner_size([375.0, 128.0])
+        .with_min_inner_size([340.0, 118.0])
         .with_resizable(true);
     if config.general.always_on_top {
         viewport = viewport.with_always_on_top();

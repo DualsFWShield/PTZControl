@@ -9,7 +9,7 @@ use std::time::{Duration, Instant};
 
 use eframe::egui::{
     self, Align, Align2, Color32, CornerRadius, FontId, Frame, Layout, Margin, RichText, Sense,
-    Stroke, Vec2,
+    Shape, Stroke, Vec2,
 };
 
 use crate::camera::{self, Camera, DeviceInfo, Range, NUM_PRESETS};
@@ -986,117 +986,134 @@ impl PtzApp {
         self.last_poll = now;
     }
 
-    fn draw_title_bar(&mut self, ctx: &egui::Context) {
-        egui::TopBottomPanel::top("titlebar")
-            .exact_height(22.0)
-            .frame(
-                Frame::new()
-                    .fill(PANEL)
-                    .inner_margin(Margin::symmetric(6, 2)),
-            )
-            .show(ctx, |ui| {
-                ui.horizontal(|ui| {
-                    // Status dot
-                    let dot_color = self.status_kind;
-                    let (rect, _) = ui.allocate_exact_size(Vec2::new(7.0, 7.0), Sense::hover());
-                    ui.painter().circle_filled(rect.center(), 3.5, dot_color);
+    fn draw_title_row(&mut self, ui: &mut egui::Ui, ctx: &egui::Context) {
+        ui.horizontal(|ui| {
+            // Status dot
+            let dot_color = self.status_kind;
+            let (rect, _) = ui.allocate_exact_size(Vec2::new(7.0, 7.0), Sense::hover());
+            ui.painter().circle_filled(rect.center(), 3.5, dot_color);
 
-                    // Camera title
-                    let title_text = if let Some(cam) = self.cameras.get(self.current) {
-                        let name = &cam.info().name;
-                        if name.len() > 18 {
-                            format!("PTZ · {}...", &name[..15])
-                        } else {
-                            format!("PTZ · {}", name)
-                        }
-                    } else {
-                        "PTZ Control".to_string()
-                    };
-                    let title_lbl = ui.label(
-                        RichText::new(title_text)
-                            .size(10.5)
-                            .color(TEXT)
-                            .strong(),
+            // Camera title
+            let title_text = if let Some(cam) = self.cameras.get(self.current) {
+                let name = &cam.info().name;
+                if name.len() > 22 {
+                    format!("PTZ · {}...", &name[..20])
+                } else {
+                    format!("PTZ · {}", name)
+                }
+            } else {
+                "PTZ Control".to_string()
+            };
+            let title_lbl = ui.label(
+                RichText::new(title_text)
+                    .size(11.0)
+                    .color(TEXT)
+                    .strong(),
+            );
+            if let Some(cam) = self.cameras.get(self.current) {
+                title_lbl.on_hover_text(format!(
+                    "{} ({})",
+                    cam.info().name,
+                    cam.motion_mode_label()
+                ));
+            }
+
+            // Right controls (Close, Minimize, Hotkey warning)
+            ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
+                let (close_rect, close_resp) =
+                    ui.allocate_exact_size(Vec2::new(18.0, 18.0), Sense::click());
+                let close_hover = close_resp.hovered();
+                if close_hover {
+                    ui.painter()
+                        .rect_filled(close_rect, CornerRadius::same(4), RED);
+                }
+                ui.painter().text(
+                    close_rect.center(),
+                    Align2::CENTER_CENTER,
+                    "×",
+                    FontId::proportional(14.0),
+                    if close_hover { TEXT } else { MUTED },
+                );
+                let close_resp = close_resp.on_hover_text("Fermer");
+                if close_resp.clicked() {
+                    ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+                }
+
+                let (min_rect, min_resp) =
+                    ui.allocate_exact_size(Vec2::new(18.0, 18.0), Sense::click());
+                let min_hover = min_resp.hovered();
+                if min_hover {
+                    ui.painter()
+                        .rect_filled(min_rect, CornerRadius::same(4), CARD_HOVER);
+                }
+                ui.painter().text(
+                    min_rect.center(),
+                    Align2::CENTER_CENTER,
+                    "−",
+                    FontId::proportional(13.0),
+                    if min_hover { TEXT } else { MUTED },
+                );
+                let min_resp = min_resp.on_hover_text("Réduire");
+                if min_resp.clicked() {
+                    ctx.send_viewport_cmd(egui::ViewportCommand::Minimized(true));
+                }
+
+                if !self.hotkey_errors.is_empty() {
+                    let warn_txt = format!("⚠ {}", self.hotkey_errors.len());
+                    let (warn_rect, warn_resp) =
+                        ui.allocate_exact_size(Vec2::new(28.0, 18.0), Sense::click());
+                    ui.painter().rect_filled(
+                        warn_rect,
+                        CornerRadius::same(4),
+                        Color32::from_rgb(60, 35, 20),
                     );
-                    if let Some(cam) = self.cameras.get(self.current) {
-                        title_lbl.on_hover_text(format!(
-                            "{} ({})",
-                            cam.info().name,
-                            cam.motion_mode_label()
-                        ));
+                    ui.painter().text(
+                        warn_rect.center(),
+                        Align2::CENTER_CENTER,
+                        &warn_txt,
+                        FontId::proportional(10.5),
+                        ORANGE,
+                    );
+                    let warn_resp = warn_resp.on_hover_text(format!(
+                        "{} raccourci(s) indisponible(s). Cliquez pour configurer.",
+                        self.hotkey_errors.len()
+                    ));
+                    if warn_resp.clicked() {
+                        self.show_settings = true;
+                        self.settings_tab = SettingsTab::Hotkeys;
                     }
+                }
 
-                    // Right controls
-                    ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                        let close = ui
-                            .add_sized(
-                                Vec2::new(18.0, 18.0),
-                                egui::Button::new(RichText::new("×").size(13.0).color(MUTED))
-                                    .fill(Color32::TRANSPARENT)
-                                    .corner_radius(CornerRadius::same(4)),
-                            )
-                            .on_hover_text("Fermer");
-                        if close.clicked() {
-                            ctx.send_viewport_cmd(egui::ViewportCommand::Close);
-                        }
-
-                        let min = ui
-                            .add_sized(
-                                Vec2::new(18.0, 18.0),
-                                egui::Button::new(RichText::new("−").size(12.0).color(MUTED))
-                                    .fill(Color32::TRANSPARENT)
-                                    .corner_radius(CornerRadius::same(4)),
-                            )
-                            .on_hover_text("Réduire");
-                        if min.clicked() {
-                            ctx.send_viewport_cmd(egui::ViewportCommand::Minimized(true));
-                        }
-
-                        if !self.hotkey_errors.is_empty() {
-                            let warn = ui
-                                .add(
-                                    egui::Button::new(
-                                        RichText::new(format!("⚠ {}", self.hotkey_errors.len()))
-                                            .size(10.0)
-                                            .color(ORANGE),
-                                    )
-                                    .fill(Color32::from_rgb(45, 30, 20))
-                                    .corner_radius(CornerRadius::same(4)),
-                                )
-                                .on_hover_text(format!(
-                                    "{} raccourci(s) indisponible(s). Cliquez pour configurer.",
-                                    self.hotkey_errors.len()
-                                ));
-                            if warn.clicked() {
-                                self.show_settings = true;
-                                self.settings_tab = SettingsTab::Hotkeys;
-                            }
-                        }
-
-                        // Middle space can be dragged
-                        let avail = ui.available_size_before_wrap();
-                        if avail.x > 8.0 {
-                            let (_, drag) = ui.allocate_exact_size(
-                                Vec2::new(avail.x, 18.0),
-                                Sense::click_and_drag(),
-                            );
-                            if drag.drag_started() {
-                                ctx.send_viewport_cmd(egui::ViewportCommand::StartDrag);
-                            }
-                        }
-                    });
-                });
+                // Middle area is draggable
+                let avail = ui.available_size_before_wrap();
+                if avail.x > 8.0 {
+                    let (_, drag) = ui.allocate_exact_size(
+                        Vec2::new(avail.x, 18.0),
+                        Sense::click_and_drag(),
+                    );
+                    if drag.drag_started() {
+                        ctx.send_viewport_cmd(egui::ViewportCommand::StartDrag);
+                    }
+                }
             });
+        });
     }
 
     fn draw_main(&mut self, ctx: &egui::Context) {
         egui::CentralPanel::default()
             .frame(
                 Frame::new()
-                    .fill(BG)
-                    .inner_margin(Margin::symmetric(6, 4)),
+                    .fill(PANEL)
+                    .stroke(Stroke::new(1.0_f32, BORDER))
+                    .inner_margin(Margin::symmetric(8, 6)),
             )
             .show(ctx, |ui| {
+                ui.spacing_mut().item_spacing = Vec2::new(3.0, 3.0);
+                ui.spacing_mut().button_padding = Vec2::new(1.0, 1.0);
+
+                self.draw_title_row(ui, ctx);
+                ui.add_space(2.0);
+
                 if self.cameras.is_empty() {
                     self.draw_empty_state(ui);
                 } else {
@@ -1125,10 +1142,13 @@ impl PtzApp {
                 if avail > 210.0 {
                     ui.add_space((avail - 210.0) / 2.0);
                 }
-                if compact_button(ui, "⟳ Actualiser", Vec2::new(100.0, 24.0), ACCENT_SOFT, TEXT).clicked() {
+                if compact_button(ui, "⟳ Actualiser", Vec2::new(100.0, 24.0), ACCENT_SOFT, TEXT)
+                    .clicked()
+                {
                     self.rescan(false);
                 }
-                if compact_button(ui, "⚙ Paramètres", Vec2::new(100.0, 24.0), CARD, MUTED).clicked() {
+                if compact_button(ui, "⚙ Paramètres", Vec2::new(100.0, 24.0), CARD, MUTED).clicked()
+                {
                     self.show_settings = true;
                     self.settings_tab = SettingsTab::General;
                 }
@@ -1137,7 +1157,7 @@ impl PtzApp {
     }
 
     fn draw_toolbar(&mut self, ui: &mut egui::Ui) {
-        let btn_size = Vec2::new(26.0, 23.0);
+        let btn_size = Vec2::new(27.0, 25.0);
         let spacing = 2.5;
         let total_h = btn_size.y * 3.0 + spacing * 2.0;
 
@@ -1145,36 +1165,56 @@ impl PtzApp {
             // 1. Zoom column (ZoomIn, AF, ZoomOut)
             ui.vertical(|ui| {
                 ui.spacing_mut().item_spacing = Vec2::new(spacing, spacing);
-                let zoom_in = toolbar_nav_button(ui, "+", btn_size, 14.0).on_hover_text("Zoom avant");
+                let zoom_in = zoom_button(ui, "+", btn_size, "Zoom avant");
 
-                let af_fill = if self.focus_auto { ACCENT_SOFT } else { CARD };
+                // AF button - guaranteed single line
+                let (af_rect, af_resp) = ui.allocate_exact_size(btn_size, Sense::click());
+                let af_hover = af_resp.hovered();
+                let af_fill = if self.focus_auto {
+                    ACCENT_SOFT
+                } else if af_hover {
+                    CARD_HOVER
+                } else {
+                    CARD
+                };
+                let af_border = if self.focus_auto || af_hover {
+                    ACCENT
+                } else {
+                    BORDER
+                };
                 let af_text = if self.focus_auto { TEXT } else { MUTED };
-                let af_tip = if self.focus_auto {
+
+                ui.painter().rect(
+                    af_rect,
+                    CornerRadius::same(5),
+                    af_fill,
+                    Stroke::new(1.0_f32, af_border),
+                    egui::StrokeKind::Inside,
+                );
+                ui.painter().text(
+                    af_rect.center(),
+                    Align2::CENTER_CENTER,
+                    "AF",
+                    FontId::proportional(11.0),
+                    af_text,
+                );
+                let af_resp = af_resp.on_hover_text(if self.focus_auto {
                     "Autofocus actif (cliquez pour manuel)"
                 } else {
                     "Autofocus désactivé (cliquez pour auto)"
-                };
-                let af = ui
-                    .add_sized(
-                        btn_size,
-                        egui::Button::new(RichText::new("AF").size(9.5).strong().color(af_text))
-                            .fill(af_fill)
-                            .stroke(Stroke::new(1.0_f32, if self.focus_auto { ACCENT } else { BORDER }))
-                            .corner_radius(CornerRadius::same(5)),
-                    )
-                    .on_hover_text(af_tip);
-                if af.clicked() {
+                });
+                if af_resp.clicked() {
                     self.toggle_auto_focus();
                 }
 
-                let zoom_out = toolbar_nav_button(ui, "−", btn_size, 14.0).on_hover_text("Zoom arrière");
+                let zoom_out = zoom_button(ui, "−", btn_size, "Zoom arrière");
 
                 let now = Instant::now();
                 self.process_hold(HoldAction::ZoomIn, zoom_in.is_pointer_button_down_on(), now);
                 self.process_hold(HoldAction::ZoomOut, zoom_out.is_pointer_button_down_on(), now);
             });
 
-            ui.add_space(3.0);
+            ui.add_space(2.0);
 
             // 2. Focus Vertical Slider
             ui.vertical(|ui| {
@@ -1203,9 +1243,9 @@ impl PtzApp {
                 }
             });
 
-            ui.add_space(4.0);
+            ui.add_space(3.0);
 
-            // 3. D-Pad 3x3 direction cross
+            // 3. D-Pad 3x3 direction cross (Vector-drawn icons)
             let mut left = None;
             let mut right = None;
             let mut up = None;
@@ -1216,25 +1256,25 @@ impl PtzApp {
                 .spacing([spacing, spacing])
                 .show(ui, |ui| {
                     ui.allocate_exact_size(btn_size, Sense::hover());
-                    let b_up = toolbar_nav_button(ui, "▲", btn_size, 11.0).on_hover_text("Inclinaison haut");
+                    let b_up = dpad_button(ui, DpadIcon::Up, btn_size, "Inclinaison haut");
                     up = Some(b_up);
                     ui.allocate_exact_size(btn_size, Sense::hover());
                     ui.end_row();
 
-                    let b_left = toolbar_nav_button(ui, "◀", btn_size, 11.0).on_hover_text("Panoramique gauche");
+                    let b_left = dpad_button(ui, DpadIcon::Left, btn_size, "Panoramique gauche");
                     left = Some(b_left);
 
-                    let home = toolbar_nav_button(ui, "⌂", btn_size, 13.0).on_hover_text("Position d'accueil (Home)");
+                    let home = dpad_button(ui, DpadIcon::Home, btn_size, "Position d'accueil (Home)");
                     if home.clicked() {
                         home_clicked = true;
                     }
 
-                    let b_right = toolbar_nav_button(ui, "▶", btn_size, 11.0).on_hover_text("Panoramique droite");
+                    let b_right = dpad_button(ui, DpadIcon::Right, btn_size, "Panoramique droite");
                     right = Some(b_right);
                     ui.end_row();
 
                     ui.allocate_exact_size(btn_size, Sense::hover());
-                    let b_down = toolbar_nav_button(ui, "▼", btn_size, 11.0).on_hover_text("Inclinaison bas");
+                    let b_down = dpad_button(ui, DpadIcon::Down, btn_size, "Inclinaison bas");
                     down = Some(b_down);
                     ui.allocate_exact_size(btn_size, Sense::hover());
                     ui.end_row();
@@ -1265,7 +1305,7 @@ impl PtzApp {
                 now,
             );
 
-            ui.add_space(4.0);
+            ui.add_space(3.0);
 
             // 4. Presets 3x3 (1..8 + M)
             let mut clicked_preset = None;
@@ -1275,35 +1315,20 @@ impl PtzApp {
                     for slot in 0..NUM_PRESETS {
                         let active = self.active_preset == Some(slot);
                         let armed = self.memory_armed;
-                        let fill = if active {
-                            GREEN
-                        } else if armed {
-                            Color32::from_rgb(60, 32, 28)
-                        } else {
-                            CARD
-                        };
-                        let text_color = if active { BG } else { TEXT };
                         let label = self.config.preset_label(self.current, slot);
-                        let resp = ui.add_sized(
-                            btn_size,
-                            egui::Button::new(
-                                RichText::new(format!("{}", slot + 1))
-                                    .size(12.0)
-                                    .strong()
-                                    .color(text_color),
-                            )
-                            .fill(fill)
-                            .stroke(Stroke::new(
-                                1.0_f32,
-                                if active { GREEN } else if armed { ORANGE } else { BORDER },
-                            ))
-                            .corner_radius(CornerRadius::same(5)),
-                        );
-                        let resp = if !label.is_empty() {
-                            resp.on_hover_text(format!("P{}: {}", slot + 1, label))
+                        let tip = if !label.is_empty() {
+                            format!("P{}: {}", slot + 1, label)
                         } else {
-                            resp.on_hover_text(format!("Préréglage {}", slot + 1))
+                            format!("Préréglage {}", slot + 1)
                         };
+                        let resp = preset_button(
+                            ui,
+                            &format!("{}", slot + 1),
+                            btn_size,
+                            active,
+                            armed,
+                            &tip,
+                        );
                         if resp.clicked() {
                             clicked_preset = Some(slot);
                         }
@@ -1314,17 +1339,12 @@ impl PtzApp {
                     }
 
                     // 9th slot in 3x3 grid is Memory button "M"
-                    let m_fill = if self.memory_armed { RED } else { CARD };
-                    let m_text = if self.memory_armed { TEXT } else { MUTED };
-                    let m_btn = ui
-                        .add_sized(
-                            btn_size,
-                            egui::Button::new(RichText::new("M").size(11.5).strong().color(m_text))
-                                .fill(m_fill)
-                                .stroke(Stroke::new(1.0_f32, if self.memory_armed { RED } else { BORDER }))
-                                .corner_radius(CornerRadius::same(5)),
-                        )
-                        .on_hover_text("Mémoriser: cliquez M puis un bouton 1-8");
+                    let m_btn = memory_button(
+                        ui,
+                        btn_size,
+                        self.memory_armed,
+                        "Mémoriser: cliquez M puis un bouton 1-8",
+                    );
                     if m_btn.clicked() {
                         self.toggle_memory();
                     }
@@ -1335,7 +1355,7 @@ impl PtzApp {
                 self.preset(slot);
             }
 
-            ui.add_space(4.0);
+            ui.add_space(3.0);
 
             // 5. Camera selector (if multi-camera)
             if self.cameras.len() > 1 {
@@ -1343,58 +1363,44 @@ impl PtzApp {
                     ui.spacing_mut().item_spacing = Vec2::new(spacing, spacing);
                     for index in 0..self.cameras.len().min(3) {
                         let active = index == self.current;
-                        let mut resp = ui.add_sized(
+                        let cam_name = self.cameras.get(index).map(|c| c.info().name.as_str()).unwrap_or("");
+                        let tip = format!("Caméra {}: {}", index + 1, cam_name);
+                        let resp = icon_tool_button(
+                            ui,
+                            &format!("C{}", index + 1),
                             btn_size,
-                            egui::Button::new(
-                                RichText::new(format!("C{}", index + 1))
-                                    .size(11.0)
-                                    .strong()
-                                    .color(if active { TEXT } else { MUTED }),
-                            )
-                            .fill(if active { ACCENT_SOFT } else { CARD })
-                            .stroke(Stroke::new(1.0_f32, if active { ACCENT } else { BORDER }))
-                            .corner_radius(CornerRadius::same(5)),
+                            active,
+                            &tip,
                         );
-                        if let Some(cam) = self.cameras.get(index) {
-                            resp = resp.on_hover_text(format!("Caméra {}: {}", index + 1, cam.info().name));
-                        }
                         if resp.clicked() {
                             self.select_camera(index);
                         }
                     }
                 });
-                ui.add_space(4.0);
+                ui.add_space(3.0);
             }
 
-            // 6. Utility column (Settings, Rescan, Active Preset)
+            // 6. Utility column (Settings ⚙, Rescan ⟳, Active Preset P#)
             ui.vertical(|ui| {
                 ui.spacing_mut().item_spacing = Vec2::new(spacing, spacing);
-                let settings = ui
-                    .add_sized(
-                        btn_size,
-                        egui::Button::new(
-                            RichText::new("⚙")
-                                .size(12.0)
-                                .color(if self.show_settings { TEXT } else { MUTED }),
-                        )
-                        .fill(if self.show_settings { ACCENT_SOFT } else { CARD })
-                        .stroke(Stroke::new(1.0_f32, if self.show_settings { ACCENT } else { BORDER }))
-                        .corner_radius(CornerRadius::same(5)),
-                    )
-                    .on_hover_text("Paramètres");
+                let settings = icon_tool_button(
+                    ui,
+                    "⚙",
+                    btn_size,
+                    self.show_settings,
+                    "Paramètres",
+                );
                 if settings.clicked() {
                     self.show_settings = !self.show_settings;
                 }
 
-                let rescan = ui
-                    .add_sized(
-                        btn_size,
-                        egui::Button::new(RichText::new("⟳").size(12.0).color(MUTED))
-                            .fill(CARD)
-                            .stroke(Stroke::new(1.0_f32, BORDER))
-                            .corner_radius(CornerRadius::same(5)),
-                    )
-                    .on_hover_text("Actualiser les caméras");
+                let rescan = icon_tool_button(
+                    ui,
+                    "⟳",
+                    btn_size,
+                    false,
+                    "Actualiser les caméras",
+                );
                 if rescan.clicked() {
                     self.rescan(false);
                 }
@@ -1405,12 +1411,12 @@ impl PtzApp {
                     .map(|p| format!("P{}", p + 1))
                     .unwrap_or_else(|| "—".into());
                 let (rect, resp) = ui.allocate_exact_size(btn_size, Sense::hover());
-                ui.painter().rect_filled(rect, CornerRadius::same(5), PANEL);
+                ui.painter().rect_filled(rect, CornerRadius::same(5), CARD);
                 ui.painter().text(
                     rect.center(),
                     Align2::CENTER_CENTER,
                     p_label,
-                    FontId::proportional(10.0),
+                    FontId::proportional(11.0),
                     MUTED,
                 );
                 resp.on_hover_text("Préréglage actif");
@@ -2058,7 +2064,6 @@ impl eframe::App for PtzApp {
             self.refresh_from_hardware();
         }
 
-        self.draw_title_bar(ctx);
         self.draw_main(ctx);
         self.settings_viewport(ctx);
 
@@ -2155,19 +2160,251 @@ fn accent_button(ui: &mut egui::Ui, text: &str, size: Vec2) -> egui::Response {
     )
 }
 
-fn toolbar_nav_button(
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum DpadIcon {
+    Up,
+    Down,
+    Left,
+    Right,
+    Home,
+}
+
+fn dpad_button(
     ui: &mut egui::Ui,
-    text: &str,
+    icon: DpadIcon,
     size: Vec2,
-    font_size: f32,
+    hover_text: &str,
 ) -> egui::Response {
-    ui.add_sized(
-        size,
-        egui::Button::new(RichText::new(text).size(font_size).color(TEXT))
-            .fill(CARD)
-            .stroke(Stroke::new(1.0_f32, BORDER))
-            .corner_radius(CornerRadius::same(5)),
-    )
+    let (rect, response) = ui.allocate_exact_size(size, Sense::click_and_drag());
+    let is_down = response.is_pointer_button_down_on();
+    let is_hover = response.hovered();
+
+    let fill = if is_down {
+        ACCENT_SOFT
+    } else if is_hover {
+        CARD_HOVER
+    } else {
+        CARD
+    };
+    let stroke_color = if is_hover { ACCENT } else { BORDER };
+
+    let painter = ui.painter();
+    painter.rect(
+        rect,
+        CornerRadius::same(5),
+        fill,
+        Stroke::new(1.0_f32, stroke_color),
+        egui::StrokeKind::Inside,
+    );
+
+    let center = rect.center();
+    let icon_color = if is_down {
+        TEXT
+    } else if is_hover {
+        Color32::WHITE
+    } else {
+        Color32::from_rgb(220, 230, 240)
+    };
+
+    match icon {
+        DpadIcon::Up => {
+            let pts = vec![
+                center + Vec2::new(0.0, -5.0),
+                center + Vec2::new(-5.0, 4.0),
+                center + Vec2::new(5.0, 4.0),
+            ];
+            painter.add(Shape::convex_polygon(pts, icon_color, Stroke::NONE));
+        }
+        DpadIcon::Down => {
+            let pts = vec![
+                center + Vec2::new(0.0, 5.0),
+                center + Vec2::new(-5.0, -4.0),
+                center + Vec2::new(5.0, -4.0),
+            ];
+            painter.add(Shape::convex_polygon(pts, icon_color, Stroke::NONE));
+        }
+        DpadIcon::Left => {
+            let pts = vec![
+                center + Vec2::new(-5.0, 0.0),
+                center + Vec2::new(4.0, -5.0),
+                center + Vec2::new(4.0, 5.0),
+            ];
+            painter.add(Shape::convex_polygon(pts, icon_color, Stroke::NONE));
+        }
+        DpadIcon::Right => {
+            let pts = vec![
+                center + Vec2::new(5.0, 0.0),
+                center + Vec2::new(-4.0, -5.0),
+                center + Vec2::new(-4.0, 5.0),
+            ];
+            painter.add(Shape::convex_polygon(pts, icon_color, Stroke::NONE));
+        }
+        DpadIcon::Home => {
+            let roof = vec![
+                center + Vec2::new(0.0, -5.5),
+                center + Vec2::new(-5.5, -0.5),
+                center + Vec2::new(5.5, -0.5),
+            ];
+            painter.add(Shape::convex_polygon(roof, icon_color, Stroke::NONE));
+            let body = egui::Rect::from_min_max(
+                center + Vec2::new(-3.5, -0.5),
+                center + Vec2::new(3.5, 5.0),
+            );
+            painter.rect_filled(body, CornerRadius::ZERO, icon_color);
+            let door = egui::Rect::from_min_max(
+                center + Vec2::new(-1.2, 1.5),
+                center + Vec2::new(1.2, 5.0),
+            );
+            painter.rect_filled(door, CornerRadius::ZERO, fill);
+        }
+    }
+
+    response.on_hover_text(hover_text)
+}
+
+fn zoom_button(
+    ui: &mut egui::Ui,
+    label: &str,
+    size: Vec2,
+    hover_text: &str,
+) -> egui::Response {
+    let (rect, resp) = ui.allocate_exact_size(size, Sense::click_and_drag());
+    let is_down = resp.is_pointer_button_down_on();
+    let is_hover = resp.hovered();
+    let fill = if is_down { ACCENT_SOFT } else if is_hover { CARD_HOVER } else { CARD };
+    let border = if is_hover { ACCENT } else { BORDER };
+    let text_color = if is_down { TEXT } else if is_hover { Color32::WHITE } else { TEXT };
+
+    ui.painter().rect(
+        rect,
+        CornerRadius::same(5),
+        fill,
+        Stroke::new(1.0_f32, border),
+        egui::StrokeKind::Inside,
+    );
+    ui.painter().text(
+        rect.center(),
+        Align2::CENTER_CENTER,
+        label,
+        FontId::proportional(14.0),
+        text_color,
+    );
+    resp.on_hover_text(hover_text)
+}
+
+fn preset_button(
+    ui: &mut egui::Ui,
+    label: &str,
+    size: Vec2,
+    active: bool,
+    armed: bool,
+    hover_text: &str,
+) -> egui::Response {
+    let (rect, resp) = ui.allocate_exact_size(size, Sense::click());
+    let is_hover = resp.hovered();
+
+    let fill = if active {
+        GREEN
+    } else if armed {
+        if is_hover { Color32::from_rgb(90, 45, 38) } else { Color32::from_rgb(65, 32, 28) }
+    } else if is_hover {
+        CARD_HOVER
+    } else {
+        CARD
+    };
+    let stroke_color = if active {
+        GREEN
+    } else if armed {
+        ORANGE
+    } else if is_hover {
+        ACCENT
+    } else {
+        BORDER
+    };
+    let text_color = if active { BG } else { TEXT };
+
+    ui.painter().rect(
+        rect,
+        CornerRadius::same(5),
+        fill,
+        Stroke::new(1.0_f32, stroke_color),
+        egui::StrokeKind::Inside,
+    );
+    ui.painter().text(
+        rect.center(),
+        Align2::CENTER_CENTER,
+        label,
+        FontId::proportional(12.0),
+        text_color,
+    );
+    resp.on_hover_text(hover_text)
+}
+
+fn memory_button(
+    ui: &mut egui::Ui,
+    size: Vec2,
+    armed: bool,
+    hover_text: &str,
+) -> egui::Response {
+    let (rect, resp) = ui.allocate_exact_size(size, Sense::click());
+    let is_hover = resp.hovered();
+
+    let fill = if armed {
+        RED
+    } else if is_hover {
+        CARD_HOVER
+    } else {
+        CARD
+    };
+    let stroke_color = if armed { RED } else if is_hover { ACCENT } else { BORDER };
+    let text_color = if armed { TEXT } else { MUTED };
+
+    ui.painter().rect(
+        rect,
+        CornerRadius::same(5),
+        fill,
+        Stroke::new(1.0_f32, stroke_color),
+        egui::StrokeKind::Inside,
+    );
+    ui.painter().text(
+        rect.center(),
+        Align2::CENTER_CENTER,
+        "M",
+        FontId::proportional(12.0),
+        text_color,
+    );
+    resp.on_hover_text(hover_text)
+}
+
+fn icon_tool_button(
+    ui: &mut egui::Ui,
+    label: &str,
+    size: Vec2,
+    active: bool,
+    hover_text: &str,
+) -> egui::Response {
+    let (rect, resp) = ui.allocate_exact_size(size, Sense::click());
+    let is_hover = resp.hovered();
+
+    let fill = if active { ACCENT_SOFT } else if is_hover { CARD_HOVER } else { CARD };
+    let stroke_color = if active { ACCENT } else if is_hover { ACCENT } else { BORDER };
+    let text_color = if active { TEXT } else if is_hover { Color32::WHITE } else { MUTED };
+
+    ui.painter().rect(
+        rect,
+        CornerRadius::same(5),
+        fill,
+        Stroke::new(1.0_f32, stroke_color),
+        egui::StrokeKind::Inside,
+    );
+    ui.painter().text(
+        rect.center(),
+        Align2::CENTER_CENTER,
+        label,
+        FontId::proportional(12.0),
+        text_color,
+    );
+    resp.on_hover_text(hover_text)
 }
 
 fn modifier_chip(ui: &mut egui::Ui, value: &mut bool, label: &str) {
