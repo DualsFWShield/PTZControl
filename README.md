@@ -147,6 +147,15 @@ It contains:
 
 ---
 
+## Releases & Downloads
+
+Pre-built standalone 64-bit executables are available on the [Releases](../../releases) page:
+- **`PTZControl-rust-x64.exe`**: Modern Rust edition with customizable global hotkeys, vector toolbar UI, and axis inversion.
+- **`PTZControl-legacy-x64.exe`**: Classic C++/MFC edition.
+- **`PTZControl.zip`**: Archive containing both x64 editions, documentation, and license.
+
+---
+
 ## Building from Source
 
 ### Rust Edition (RustControl/)

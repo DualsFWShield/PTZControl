@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   build-rust-x64:
-    name: Build Release (x64)
+    name: Build Rust (x64)
     runs-on: windows-latest
     steps:
       - name: Checkout repository
@@ -28,15 +28,37 @@ jobs:
         run: cargo build --release --target x86_64-pc-windows-msvc
         working-directory: RustControl
 
-      - name: Upload PTZControl (x64) artifact
+      - name: Upload Rust PTZControl (x64) artifact
         uses: actions/upload-artifact@v4
         with:
-          name: PTZControl-x64
+          name: PTZControl-rust-x64
           path: RustControl/target/x86_64-pc-windows-msvc/release/PTZControl.exe
+
+  build-legacy-x64:
+    name: Build Legacy C++ (x64)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild path
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Restore NuGet packages
+        run: nuget restore PTZControl/PTZControl.sln
+
+      - name: Build legacy PTZControl (x64)
+        run: msbuild PTZControl/PTZControl.sln /p:Configuration=Release /p:Platform=x64
+
+      - name: Upload legacy PTZControl (x64) artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PTZControl-legacy-x64
+          path: PTZControl/x64/Release/PTZControl.exe
 
   create-release:
     name: Publish to GitHub Releases
-    needs: [build-rust-x64]
+    needs: [build-rust-x64, build-legacy-x64]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -63,22 +85,29 @@ jobs:
           echo "title=${TITLE}" >> "$GITHUB_OUTPUT"
           echo "prerelease=${PRERELEASE}" >> "$GITHUB_OUTPUT"
 
-      - name: Download x64 artifact
+      - name: Download Rust x64 artifact
         uses: actions/download-artifact@v4
         with:
-          name: PTZControl-x64
-          path: ./dist-x64
+          name: PTZControl-rust-x64
+          path: ./dist-rust
+
+      - name: Download Legacy x64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: PTZControl-legacy-x64
+          path: ./dist-legacy
 
       - name: Prepare Release Executables and Archive
         shell: bash
         run: |
-          # Standalone executable
-          cp ./dist-x64/PTZControl.exe ./PTZControl.exe
-          cp ./dist-x64/PTZControl.exe ./PTZControl-x64.exe
+          # Individual standalone executables
+          cp ./dist-rust/PTZControl.exe ./PTZControl-rust-x64.exe
+          cp ./dist-legacy/PTZControl.exe ./PTZControl-legacy-x64.exe
 
-          # Zip bundle
+          # Bundle containing both versions
           mkdir -p ./bundle
-          cp ./dist-x64/PTZControl.exe ./bundle/PTZControl.exe
+          cp ./PTZControl-rust-x64.exe ./bundle/
+          cp ./PTZControl-legacy-x64.exe ./bundle/
           [ -f README.md ] && cp README.md ./bundle/
           [ -f LICENSE ] && cp LICENSE ./bundle/
           (cd ./bundle && zip -r ../PTZControl.zip .)
@@ -90,8 +119,8 @@ jobs:
           name: ${{ steps.meta.outputs.title }}
           prerelease: ${{ steps.meta.outputs.prerelease == 'true' }}
           files: |
-            ./PTZControl.exe
-            ./PTZControl-x64.exe
+            ./PTZControl-rust-x64.exe
+            ./PTZControl-legacy-x64.exe
             ./PTZControl.zip
           generate_release_notes: true
         env:

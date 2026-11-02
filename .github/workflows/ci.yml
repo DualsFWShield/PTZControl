@@ -27,3 +27,19 @@ jobs:
       - name: Cargo build (Release)
         run: cargo build --release --target x86_64-pc-windows-msvc
         working-directory: RustControl
+
+  legacy-build:
+    name: Legacy C++ Build (x64)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild path
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Restore NuGet packages
+        run: nuget restore PTZControl/PTZControl.sln
+
+      - name: Build legacy PTZControl (x64)
+        run: msbuild PTZControl/PTZControl.sln /p:Configuration=Release /p:Platform=x64
