@@ -4,32 +4,62 @@
 
 # PTZControl
 
-A lightweight, always-on-top Windows application to control Pan-Tilt-Zoom (PTZ) cameras and webcams with precision, presets, optical focus, and image adjustments.
+A lightweight, high-performance, always-on-top Windows application to control Pan-Tilt-Zoom (PTZ) cameras and webcams with precision, presets, optical focus, and image adjustments.
+
+Written in pure **Rust** (`RustControl/`), with the classic **C++/MFC** implementation preserved (`PTZControl/`).
+
+---
+
+## 📸 Screenshots
+
+| Modern Compact Overlay (Floating Toolbar) |
+|:---:|
+| ![Compact Floating Toolbar](preview/Control-panel.png) |
+
+| Settings Dialog (Image, Presets, Customizable Hotkeys, Axis Inversion) |
+|:---:|
+| ![Settings Dialog](preview/R%C3%A9glages.png) |
 
 ---
 
 ## Features
 
-- **Compact Floating Toolbar**: Always-on-top compact overlay designed to sit unobtrusively over OBS Studio, vMix, or your streaming setup.
-- **Precision Pan / Tilt / Zoom**: Directional D-pad, smooth timer-controlled or step-by-step motor movement, and quick Zoom In/Out.
-- **Optical Focus Slider & Auto-Focus (AF)**:
-  - Vertical manual focus trackbar placed right on the main floating interface.
-  - Dedicated **AF** toggle button to switch between continuous autofocus and manual adjustment on the fly.
+- **Compact Floating Toolbar**: Ultra-compact, always-on-top floating overlay designed to sit unobtrusively over OBS Studio, vMix, or your streaming desktop.
+- **Vector-Rendered D-Pad & Controls**: Crisp geometric icons and buttons rendered at any DPI scaling with zero clipping.
+- **Precision Pan / Tilt / Zoom**: Directional controls with timer-based or hardware-step motor movements and smooth Zoom In/Out.
+- **Optical Focus & Auto-Focus (AF)**:
+  - Vertical manual focus slider directly on the floating toolbar.
+  - Dedicated one-click **AF** toggle to switch between continuous autofocus and manual adjustment on the fly.
 - **Image & Color Adjustments**:
-  - Sliders for **Brightness**, **Contrast**, and **Saturation** via DirectShow ProcAmp in the Settings dialog.
-  - Numeric value readouts and a one-click **Reset Defaults** button.
-- **8 Camera Presets per Camera**: Store and recall up to 8 positions per camera with visual active preset indicators (green for current, red for Memory mode). Custom tooltips can be configured per preset.
-- **Multi-Camera Switching**: Seamlessly manage up to 3 cameras with dedicated C1, C2, and C3 buttons (dialog dynamically adapts its size when fewer cameras are detected).
+  - DirectShow ProcAmp sliders for **Brightness**, **Contrast**, and **Saturation** in the Settings dialog.
+  - Real-time numeric values and one-click **Reset Defaults** button.
+- **8 Camera Presets per Camera**: Store and recall up to 8 positions per camera with visual active preset indicators (green for active, red for Memory store mode). Custom tooltips can be configured per preset.
+- **Multi-Camera Switching**: Seamlessly manage up to 3 cameras with dedicated C1, C2, and C3 buttons (the interface dynamically adapts its size when fewer cameras are detected).
+- **Axis Inversion**: Invert Pan, Tilt, Zoom, or Focus axes individually to accommodate upside-down, inverted, or ceiling-mounted cameras.
 - **Broad Camera Compatibility**: Automatically detects Logitech PTZ 2 Pro, PTZ Pro, Rally, Group, and ConferenceCam CC3000e, with fallback discovery for standard DirectShow / USB webcams.
-- **Hotkeys & Remote Triggers**: Local and global hotkeys, plus extensive command-line parameters for Bitfocus Companion and Elgato Stream Deck integration.
-- **Watchdog Guard Thread**: Detects USB bus or driver freezes and safely terminates to prevent blocking your production workflow.
-- **Standalone Portable Binary**: No installation required; standalone 64-bit Windows executable.
+- **Global & Local Hotkeys**:
+  - Global keyboard shortcuts intercepted system-wide even when the application is unfocused.
+  - Fully customizable shortcuts from the Settings dialog, defaulting to combinations that do not conflict with Windows built-in shortcuts.
+- **Command-Line & Automation**: Full CLI interface for integration with **Bitfocus Companion**, **Elgato Stream Deck**, or external scripts with automatic forwarding to running instances.
+- **Watchdog Guard Thread**: Detects USB bus or driver stalls and safely exits to prevent hanging your production workflow.
+- **Clean JSON Configuration**: Stored cleanly in `%APPDATA%\PTZControl\config.json` instead of registry keys.
+- **Standalone Portable Binaries**: No installation required; portable 64-bit Windows executables.
 
 ---
 
-## History
+## 👥 Credits & Attribution
 
-This small program was originally designed to control a Logitech PTZ 2 Pro purchased to stream church services. Operation with the infrared remote control proved cumbersome and inaccurate when the camera was installed high and behind the video technician. The bundled vendor software was inadequate, prompting the creation of a responsive, dedicated control tool. Over time, support was added for multiple cameras (up to three), the Logitech Rally, PTZ Pro, and general DirectShow devices.
+This project is a modernized Rust rewrite based on the original **[PTZControl](https://github.com/xMRi/PTZControl)** by **[xMRi](https://github.com/xMRi)**.
+
+- **Original Author & Project**: [xMRi/PTZControl](https://github.com/xMRi/PTZControl) (C++ / MFC).
+  - Special thanks to xMRi for the foundational architecture, DirectShow COM interfaces, Logitech Extension Unit (CSRK) research, preset system, and single-instance CLI design.
+- **Rust Rewrite & Modernization**: [Noah Bruijninckx (DualsFWShield)](https://github.com/DualsFWShield/PTZControl).
+  - Complete rewrite in pure Rust with `eframe` / `egui`.
+  - Conflict-free, customizable global keyboard shortcuts captured via background Windows hook.
+  - Invertible motion axes for ceiling / inverted camera mounts.
+  - DPI-resilient compact UI with vector-drawn controls.
+  - JSON-based configuration management (`%APPDATA%\PTZControl\config.json`).
+  - Automated dual-edition 64-bit releases (Rust + Legacy C++) via GitHub Actions.
 
 ---
 
@@ -44,7 +74,7 @@ This small program was originally designed to control a Logitech PTZ 2 Pro purch
 - **Environment**: Modern Rust implementation (`RustControl/`) using `eframe`/`egui` and direct Windows COM/DirectShow bindings via the official `windows` crate. Legacy C++/MFC version is preserved in `PTZControl/`. No external runtime dependencies or installer needed.
 - **Customizable Global Hotkeys**: Intercepted system-wide via a hidden message window even when the application is not focused, fully editable in the Settings dialog.
 - **Invertible Pan/Tilt/Zoom/Focus Axes**: Easily invert any motion axis for inverted or ceiling-mounted camera rigs.
-- **JSON Configuration**: Stored cleanly in `%APPDATA%\PTZControl\config.json` instead of registry hives.
+- **JSON Configuration**: Stored cleanly in `%APPDATA%\PTZControl\config.json`.
 
 ---
 
@@ -82,16 +112,17 @@ This small program was originally designed to control a Logitech PTZ 2 Pro purch
 - **Select Camera 2**: `Alt + 2`, `Alt + NumPad 2`, `Alt + Page Down`
 
 ### Global Hotkeys (Usable from Any Application)
-Global hotkeys use the Windows Key with modifier combinations:
+Global hotkeys use modifier combinations designed to avoid conflicting with Windows shortcut reservations:
 - **Camera 1**:
-  - Home: `Win + NumPad 0`
-  - Presets 1–8: `Win + NumPad 1` to `NumPad 8`
+  - Home: `Ctrl + Shift + NumPad 0`
+  - Presets 1–8: `Ctrl + Shift + NumPad 1` to `NumPad 8`
 - **Camera 2**:
-  - Home: `Win + Ctrl + NumPad 0`
-  - Presets 1–8: `Win + Ctrl + NumPad 1` to `NumPad 8`
+  - Home: `Ctrl + Alt + NumPad 0`
+  - Presets 1–8: `Ctrl + Alt + NumPad 1` to `NumPad 8`
 - **Camera 3**:
-  - Home: `Win + Alt + NumPad 0`
-  - Presets 1–8: `Win + Alt + NumPad 1` to `NumPad 8`
+  - Home: `Ctrl + Shift + Alt + NumPad 0`
+  - Presets 1–8: `Ctrl + Shift + Alt + NumPad 1` to `NumPad 8`
+- **Customizable**: Every global shortcut can be reassigned or cleared in the **Paramètres → Raccourcis** tab.
 
 ---
 
@@ -131,19 +162,19 @@ Command-line parameters allow control from external automation tools such as **B
 ## Configuration & Persistence
 
 In the modern Rust edition, configuration is persisted in a clean, human-readable JSON file:
-`	ext
+```text
 %APPDATA%\PTZControl\config.json
-`
-(Can also be overridden with the PTZCONTROL_CONFIG environment variable).
+```
+(Can also be overridden with the `PTZCONTROL_CONFIG` environment variable).
 
 It contains:
-- **General**: lways_on_top, eset_on_start, guard watchdog, use_logitech_motion, motor_interval_ms, device_tokens.
-- **Axes**: invert_pan, invert_tilt, invert_zoom, invert_focus for ceiling-mounted or mirrored setups.
+- **General**: `always_on_top`, `reset_on_start`, guard watchdog, `use_logitech_motion`, `motor_interval_ms`, `device_tokens`.
+- **Axes**: `invert_pan`, `invert_tilt`, `invert_zoom`, `invert_focus` for ceiling-mounted or mirrored setups.
 - **Presets**: Custom tooltip labels for all 8 presets across up to 3 cameras.
 - **Hotkeys**: Full user-customizable bindings for all actions and camera selections.
 - **Window**: Remembers and restores window coordinates.
 
-*(The legacy C++ edition used HKEY_CURRENT_USER\SOFTWARE\MRi-Software\PTZControl).*
+*(The legacy C++ edition used `HKEY_CURRENT_USER\SOFTWARE\MRi-Software\PTZControl`).*
 
 ---
 
@@ -159,16 +190,27 @@ Pre-built standalone 64-bit executables are available on the [Releases](../../re
 ## Building from Source
 
 ### Rust Edition (RustControl/)
-Prerequisites: Rust stable toolchain (x86_64-pc-windows-msvc).
-`powershell
+Prerequisites: Rust stable toolchain (`x86_64-pc-windows-msvc`).
+```powershell
 cd RustControl
 
 # Build 64-bit release binary
 cargo build --release
-`
+```
 
 ### Legacy C++ Edition (PTZControl/)
 Built with Visual Studio / MSBuild:
-`powershell
+```powershell
 msbuild PTZControl/PTZControl.sln /p:Configuration=Release /p:Platform=x64
-`
+```
+
+---
+
+## 📜 License
+
+This project is licensed under the **GNU General Public License v3.0** (`GPL-3.0-or-later`).
+
+- Original C++/MFC Application: Copyright (C) **xMRi** ([https://github.com/xMRi/PTZControl](https://github.com/xMRi/PTZControl))
+- Rust Rewrite & Modernization: Copyright (C) 2026 **Noah Bruijninckx (DualsFWShield)** ([https://github.com/DualsFWShield/PTZControl](https://github.com/DualsFWShield/PTZControl))
+
+See the [LICENSE](LICENSE) file for the full license terms.
