@@ -315,33 +315,33 @@ pub fn default_hotkeys() -> Vec<HotkeyBinding> {
         out.push(HotkeyBinding::new(
             action,
             None,
-            Some(Hotkey::new(false, false, true, true, key)),
+            Some(Hotkey::new(true, true, false, false, key)),
         ));
     }
     out.push(HotkeyBinding::new(
         ZoomIn,
         None,
-        Some(Hotkey::new(false, false, true, true, "PageUp")),
+        Some(Hotkey::new(true, true, false, false, "PageUp")),
     ));
     out.push(HotkeyBinding::new(
         ZoomOut,
         None,
-        Some(Hotkey::new(false, false, true, true, "PageDown")),
+        Some(Hotkey::new(true, true, false, false, "PageDown")),
     ));
     out.push(HotkeyBinding::new(
         Memory,
         None,
-        Some(Hotkey::new(false, false, true, true, "M")),
+        Some(Hotkey::new(true, true, false, false, "M")),
     ));
     out.push(HotkeyBinding::new(
         ToggleAutoFocus,
         None,
-        Some(Hotkey::new(false, false, true, true, "F")),
+        Some(Hotkey::new(true, true, false, false, "F")),
     ));
     out.push(HotkeyBinding::new(
         OpenSettings,
         None,
-        Some(Hotkey::new(false, false, true, true, "S")),
+        Some(Hotkey::new(true, true, false, false, "P")),
     ));
     out
 }
@@ -356,6 +356,21 @@ impl Config {
         self.presets.resize_with(NUM_CAMERAS, Vec::new);
         for camera in &mut self.presets {
             camera.resize_with(NUM_PRESETS, String::new);
+        }
+
+        // Migrate conflicting Win+Shift shortcuts (which collide with Windows 10/11 system hotkeys)
+        for binding in &mut self.hotkeys {
+            if let Some(hotkey) = &mut binding.hotkey {
+                if hotkey.win && hotkey.shift {
+                    hotkey.win = false;
+                    hotkey.shift = false;
+                    hotkey.ctrl = true;
+                    hotkey.alt = true;
+                    if binding.action == HotkeyAction::OpenSettings && hotkey.key == "S" {
+                        hotkey.key = "P".to_string();
+                    }
+                }
+            }
         }
 
         // Fill in shortcuts introduced by later versions without losing a user's

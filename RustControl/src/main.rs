@@ -73,9 +73,13 @@ fn main() -> eframe::Result<()> {
 
     let mut viewport = egui::ViewportBuilder::default()
         .with_title(APP_TITLE)
-        .with_inner_size([470.0, 700.0])
-        .with_min_inner_size([420.0, 560.0])
+        .with_decorations(false)
+        .with_inner_size([320.0, 108.0])
+        .with_min_inner_size([280.0, 95.0])
         .with_resizable(true);
+    if config.general.always_on_top {
+        viewport = viewport.with_always_on_top();
+    }
     if let Some(icon) = load_icon() {
         viewport = viewport.with_icon(icon);
     }
